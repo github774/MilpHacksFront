@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import { BrainSimulation } from "./components/BrainSimulation";
+import { simulateContent, type ApiSimulationResult } from "./api";
 
 interface UseAutoResizeTextareaProps {
   minHeight: number;
@@ -188,10 +189,34 @@ export default function App() {
   const [inputFocused, setInputFocused] = useState(false);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
 
+  // File Upload State
+  const [mediaFile, setMediaFile] = useState<{
+    name: string;
+    type: string;
+    base64: string;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaFile({
+        name: file.name,
+        type: file.type,
+        base64: reader.result as string,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   // App Layout States
   const [showDashboard, setShowDashboard] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [results, setResults] = useState<SimulationResults | null>(null);
+  const [rawSimData, setRawSimData] = useState<ApiSimulationResult["rawSimulation"] | null>(null);
 
   const commandSuggestions: CommandSuggestion[] = [
     {
@@ -317,85 +342,110 @@ export default function App() {
     }, 2000);
   };
 
-  // Run Simulation analysis calculations
-  const runSimulation = () => {
-    if (!value.trim()) return;
+
+  // Run Simulation analysis calculations calling Python backend with client-side fallback
+  const runSimulation = async () => {
+    if (!value.trim() && !mediaFile) return;
 
     setIsSimulating(true);
     setShowDashboard(true);
+    setRawSimData(null); // Reset raw simulation data
 
-    // Dynamic generation based on keyword checks
-    const textLower = value.toLowerCase();
-    
-    // Heuristics for calculations
-    const isToxicProductivity = textLower.includes("grind") || textLower.includes("fail") || textLower.includes("deserve");
-    const isSelfHarm = textLower.includes("ugly") || textLower.includes("delete myself") || textLower.includes("notice") || textLower.includes("die") || textLower.includes("suicide");
-    const isSensational = textLower.includes("destroying") || textLower.includes("no hope") || textLower.includes("skyrocketing") || textLower.includes("failing");
-    
-    let calculatedRisk = 30;
-    if (isSelfHarm) calculatedRisk = 92;
-    else if (isToxicProductivity) calculatedRisk = 78;
-    else if (isSensational) calculatedRisk = 65;
-
-    // Adjust risk slightly based on audience count
-    calculatedRisk += selectedGroups.length * 2;
-    calculatedRisk = Math.max(10, Math.min(calculatedRisk, 98));
-
-    // Wait 3.5s for particle simulation to run
-    setTimeout(() => {
-      let empathy = 100 - calculatedRisk + 10;
-      let attention = isToxicProductivity ? 82 : (isSelfHarm ? 94 : (isSensational ? 76 : 50));
-      let spread = calculatedRisk + 5;
-      let harm = calculatedRisk;
-      let support = 100 - calculatedRisk;
-
-      empathy = Math.max(5, Math.min(empathy, 95));
-      attention = Math.max(15, Math.min(attention, 98));
-      spread = Math.max(10, Math.min(spread, 99));
-      harm = Math.max(5, Math.min(harm, 98));
-      support = Math.max(5, Math.min(support, 95));
-
-      // Rewrite options
-      let rewrite = "Let's share this in a way that respects mental health boundaries.";
-      if (isSelfHarm) {
-        rewrite = "Feeling really overwhelmed today and struggling with self-image. Taking a break from social media to ground myself. Sending love to anyone else having a hard day.";
-      } else if (isToxicProductivity) {
-        rewrite = "Consistent hard work can yield great results, but sustainable success requires rest and self-care. Take care of your mental health first.";
-      } else if (isSensational) {
-        rewrite = "Recent studies open up important discussions about social media's role in adolescent brain development, highlighting areas where caregivers can offer support.";
-      } else {
-        rewrite = "Sharing some perspectives on personal wellness and digital usage. Let's build supportive discussions.";
+    try {
+      // Call real backend simulation API
+      const apiRes = await simulateContent(value, selectedGroups, mediaFile);
+      
+      // If the backend transcribed or analyzed visual content, update the textarea content
+      if (apiRes.extractedTranscript) {
+        setValue(apiRes.extractedTranscript);
       }
+      
+      // Delay results display slightly to let the brain particle flow animation play
+      setTimeout(() => {
+        setResults({
+          riskScore: apiRes.riskScore,
+          empathyScore: apiRes.empathyScore,
+          attentionScore: apiRes.attentionScore,
+          sentimentScore: apiRes.sentimentScore,
+          harmScore: apiRes.harmScore,
+          supportScore: apiRes.supportScore,
+          saferRewrite: apiRes.saferRewrite,
+          affectedGroups: apiRes.affectedGroups,
+          predictedEmotions: apiRes.predictedEmotions
+        });
+        setRawSimData(apiRes.rawSimulation);
+        setIsSimulating(false);
+      }, 3200);
 
-      // Personality group impacts
-      const groups = [
-        { name: "Teens", impact: isSelfHarm ? "High emotional distress risk" : (isToxicProductivity ? "Triggers validation anxiety" : "Mild engagement"), severity: ((isSelfHarm || isToxicProductivity) ? "high" : "medium") as "high" | "medium" | "low" },
-        { name: "Anxious Users", impact: isSelfHarm ? "Triggers rumination loop" : (isSensational ? "Amplifies general hopelessness" : "Moderate stress increase"), severity: ((isSelfHarm || isSensational) ? "high" : "medium") as "high" | "medium" | "low" },
-        { name: "Caregivers", impact: isSensational ? "Promotes parental burnout/anxiety" : "Induces protective concerns", severity: (isSensational ? "high" : "low") as "high" | "medium" | "low" },
-        { name: "General Public", impact: "Passive content saturation and spread", severity: "low" as "high" | "medium" | "low" }
-      ].filter(g => selectedGroups.includes(g.name.toLowerCase().replace(" ", "")));
+    } catch (error) {
+      console.warn("Backend server not running or error encountered. Falling back to local heuristic calculations...", error);
+      
+      // Graceful fallback to client-side heuristics
+      const textLower = value.toLowerCase();
+      const isToxicProductivity = textLower.includes("grind") || textLower.includes("fail") || textLower.includes("deserve");
+      const isSelfHarm = textLower.includes("ugly") || textLower.includes("delete myself") || textLower.includes("notice") || textLower.includes("die") || textLower.includes("suicide");
+      const isSensational = textLower.includes("destroying") || textLower.includes("no hope") || textLower.includes("skyrocketing") || textLower.includes("failing");
+      
+      let calculatedRisk = 30;
+      if (isSelfHarm) calculatedRisk = 92;
+      else if (isToxicProductivity) calculatedRisk = 78;
+      else if (isSensational) calculatedRisk = 65;
 
-      // Emotions chart
-      const emotions = [
-        { name: "Anxiety", percentage: Math.round(calculatedRisk * 0.45), color: "#a3a3a3" },
-        { name: "Hopelessness", percentage: Math.round(calculatedRisk * 0.35), color: "#525252" },
-        { name: "Validation-Seeking", percentage: Math.round(attention * 0.4), color: "#d4d4d4" },
-        { name: "Empathy / Care", percentage: Math.round(support * 0.8), color: "#e5e5e5" }
-      ].sort((a, b) => b.percentage - a.percentage);
+      calculatedRisk += selectedGroups.length * 2;
+      calculatedRisk = Math.max(10, Math.min(calculatedRisk, 98));
 
-      setResults({
-        riskScore: calculatedRisk,
-        empathyScore: empathy,
-        attentionScore: attention,
-        sentimentScore: spread,
-        harmScore: harm,
-        supportScore: support,
-        saferRewrite: rewrite,
-        affectedGroups: groups,
-        predictedEmotions: emotions
-      });
-      setIsSimulating(false);
-    }, 3200);
+      setTimeout(() => {
+        let empathy = 100 - calculatedRisk + 10;
+        let attention = isToxicProductivity ? 82 : (isSelfHarm ? 94 : (isSensational ? 76 : 50));
+        let spread = calculatedRisk + 5;
+        let harm = calculatedRisk;
+        let support = 100 - calculatedRisk;
+
+        empathy = Math.max(5, Math.min(empathy, 95));
+        attention = Math.max(15, Math.min(attention, 98));
+        spread = Math.max(10, Math.min(spread, 99));
+        harm = Math.max(5, Math.min(harm, 98));
+        support = Math.max(5, Math.min(support, 95));
+
+        let rewrite = "Let's share this in a way that respects mental health boundaries.";
+        if (isSelfHarm) {
+          rewrite = "Feeling really overwhelmed today and struggling with self-image. Taking a break from social media to ground myself. Sending love to anyone else having a hard day.";
+        } else if (isToxicProductivity) {
+          rewrite = "Consistent hard work can yield great results, but sustainable success requires rest and self-care. Take care of your mental health first.";
+        } else if (isSensational) {
+          rewrite = "Recent studies open up important discussions about social media's role in adolescent brain development, highlighting areas where caregivers can offer support.";
+        } else {
+          rewrite = "Sharing some perspectives on personal wellness and digital usage. Let's build supportive discussions.";
+        }
+
+        const groups = [
+          { name: "Teens", impact: isSelfHarm ? "High emotional distress risk" : (isToxicProductivity ? "Triggers validation anxiety" : "Mild engagement"), severity: ((isSelfHarm || isToxicProductivity) ? "high" : "medium") as "high" | "medium" | "low" },
+          { name: "Anxious Users", impact: isSelfHarm ? "Triggers rumination loop" : (isSensational ? "Amplifies general hopelessness" : "Moderate stress increase"), severity: ((isSelfHarm || isSensational) ? "high" : "medium") as "high" | "medium" | "low" },
+          { name: "Caregivers", impact: isSensational ? "Promotes parental burnout/anxiety" : "Induces protective concerns", severity: (isSensational ? "high" : "low") as "high" | "medium" | "low" },
+          { name: "General Public", impact: "Passive content saturation and spread", severity: "low" as "high" | "medium" | "low" }
+        ].filter(g => selectedGroups.includes(g.name.toLowerCase().replace(" ", "")));
+
+        const emotions = [
+          { name: "Anxiety", percentage: Math.round(calculatedRisk * 0.45), color: "#a3a3a3" },
+          { name: "Hopelessness", percentage: Math.round(calculatedRisk * 0.35), color: "#525252" },
+          { name: "Validation-Seeking", percentage: Math.round(attention * 0.4), color: "#d4d4d4" },
+          { name: "Empathy / Care", percentage: Math.round(support * 0.8), color: "#e5e5e5" }
+        ].sort((a, b) => b.percentage - a.percentage);
+
+        setResults({
+          riskScore: calculatedRisk,
+          empathyScore: empathy,
+          attentionScore: attention,
+          sentimentScore: spread,
+          harmScore: harm,
+          supportScore: support,
+          saferRewrite: rewrite,
+          affectedGroups: groups,
+          predictedEmotions: emotions
+        });
+        setIsSimulating(false);
+      }, 3200);
+    }
   };
 
   const handleSendMessage = () => {
@@ -1524,6 +1574,30 @@ export default function App() {
                   />
                 </div>
 
+                {/* Media Attachment Preview */}
+                {mediaFile && (
+                  <div className="px-4 pb-3 flex items-center gap-2">
+                    <div className="glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2.5 text-xs border border-white/10 bg-white/[0.03]">
+                      {mediaFile.type.startsWith("image/") ? (
+                        <img src={mediaFile.base64} className="w-8 h-8 rounded object-cover border border-white/10" />
+                      ) : (
+                        <div className="w-8 h-8 bg-neutral-900 border border-white/10 rounded flex items-center justify-center font-bold text-[8px]">MP4</div>
+                      )}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-white/90 font-medium truncate max-w-[150px]">{mediaFile.name}</span>
+                        <span className="text-white/40 text-[9px] uppercase tracking-wider">{mediaFile.type.split("/")[0]} attached</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setMediaFile(null)}
+                        className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"
+                      >
+                        <XIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Target Archetype Checkboxes inside input box */}
                  <div className="px-4 pb-3 border-b border-white/[0.04] flex flex-col gap-2">
                   <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
@@ -1572,15 +1646,31 @@ export default function App() {
                       <Command className="w-3.5 h-3.5" />
                       <span>Presets</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 text-white/40 hover:text-white/95 rounded-lg transition-colors bg-white/[0.02] border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-xs"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>Attach Media</span>
+                    </button>
+                    <input 
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*,video/*"
+                      className="hidden"
+                    />
                   </div>
 
                   <button
                     type="button"
                     onClick={runSimulation}
-                    disabled={!value.trim()}
+                    disabled={!value.trim() && !mediaFile}
                     className={cn(
                       "px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 tracking-wide border",
-                      value.trim()
+                      (value.trim() || mediaFile)
                         ? "bg-white text-black border-transparent hover:bg-neutral-100 active:scale-98"
                         : "bg-white/[0.02] border-white/5 text-white/30 cursor-not-allowed"
                     )}
@@ -1644,6 +1734,35 @@ export default function App() {
                     />
                   </div>
 
+                  {/* Dashboard Media Attachment Preview */}
+                  {mediaFile && (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                        Attached Media
+                      </label>
+                      <div className="glass-panel p-2 rounded-xl flex items-center justify-between gap-2 border border-white/10 bg-white/[0.03]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {mediaFile.type.startsWith("image/") ? (
+                            <img src={mediaFile.base64} className="w-8 h-8 rounded object-cover border border-white/10" />
+                          ) : (
+                            <div className="w-8 h-8 bg-neutral-900 border border-white/10 rounded flex items-center justify-center font-bold text-[8px]">MP4</div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-white/90 font-medium text-xs truncate max-w-[120px]">{mediaFile.name}</span>
+                            <span className="text-white/40 text-[9px] uppercase tracking-wider">{mediaFile.type.split("/")[0]} attached</span>
+                          </div>
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => setMediaFile(null)}
+                          className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Archetype checkboxes */}
                   <div className="space-y-2.5">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
@@ -1677,19 +1796,30 @@ export default function App() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={runSimulation}
-                    disabled={isSimulating || !value.trim()}
-                    className={cn(
-                      "w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border tracking-wide",
-                      value.trim()
-                        ? "bg-white text-black border-transparent hover:bg-white/90 active:scale-98"
-                        : "bg-white/[0.02] border-white/5 text-white/30 cursor-not-allowed"
-                    )}
-                  >
-                    <RefreshCw className={cn("w-3.5 h-3.5", isSimulating && "animate-spin")} />
-                    <span>{isSimulating ? "Analyzing..." : "Re-Simulate"}</span>
-                  </button>
+                  <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-2 rounded-xl text-xs font-semibold bg-white/[0.02] border border-white/5 hover:border-white/10 text-white/70 hover:text-white flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      <span>{mediaFile ? "Change Media" : "Attach Media"}</span>
+                    </button>
+
+                    <button
+                      onClick={runSimulation}
+                      disabled={isSimulating || (!value.trim() && !mediaFile)}
+                      className={cn(
+                        "w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border tracking-wide",
+                        (value.trim() || mediaFile)
+                          ? "bg-white text-black border-transparent hover:bg-white/90 active:scale-98"
+                          : "bg-white/[0.02] border-white/5 text-white/30 cursor-not-allowed"
+                      )}
+                    >
+                      <RefreshCw className={cn("w-3.5 h-3.5", isSimulating && "animate-spin")} />
+                      <span>{isSimulating ? "Analyzing..." : "Re-Simulate"}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Info Tip Card */}
@@ -1717,11 +1847,12 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* The interactive Canvas container */}
                   <BrainSimulation
                     isActive={isSimulating}
                     selectedGroups={selectedGroups}
                     riskScore={results?.riskScore || 50}
+                    agents={rawSimData?.agents}
+                    shareEdges={rawSimData?.share_edges}
                     onSelectNode={(node) => {
                       if (node && node.isHub && node.group) {
                         setSelectedNode({ id: node.id, label: node.label, region: node.region });

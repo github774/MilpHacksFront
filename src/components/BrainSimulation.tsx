@@ -7,7 +7,10 @@ interface BrainSimulationProps {
   riskScore: number;
   selectedNodeId?: number | null;
   onSelectNode?: (node: BrainNode | null) => void;
+  agents?: any[];
+  shareEdges?: any[];
 }
+
 
 interface BrainNode {
   id: number;
@@ -106,7 +109,9 @@ export function BrainSimulation({
   selectedGroups,
   riskScore,
   selectedNodeId,
-  onSelectNode
+  onSelectNode,
+  agents,
+  shareEdges
 }: BrainSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -212,6 +217,17 @@ export function BrainSimulation({
 
     initAmbientParticles();
 
+    const getMappedNodeId = (index: number): number => {
+      return (index % 18) + 2;
+    };
+
+    const getNodeGroup = (nodeId: number): string => {
+      if (nodeId >= 2 && nodeId <= 5) return "teens";
+      if (nodeId >= 6 && nodeId <= 9) return "anxious";
+      if (nodeId >= 10 && nodeId <= 13) return "caregivers";
+      return "general";
+    };
+
     // Trigger simulation signal blast
     const triggerSimulationBlast = () => {
       // Clear ambient particles to focus on the content flow
@@ -219,27 +235,59 @@ export function BrainSimulation({
       ripples = [];
       floatingTexts = [];
 
-      // Determine active hubs based on selected groups
-      const activeHubs = brainNodes.filter(n => n.isHub && n.group && selectedGroups.includes(n.group));
-      
-      // If no groups are selected, route to general public
-      const destinations = activeHubs.length > 0 
-        ? activeHubs 
-        : [brainNodes.find(n => n.group === "general")!];
+      if (agents && agents.length > 0 && shareEdges) {
+        // --- REAL BACKEND SIMULATION ANIMATION ---
+        
+        // 1. Wave 0: Seeds (triggered immediately)
+        const seeds = agents.filter(a => a.wave === 0);
+        seeds.forEach((seed, idx) => {
+          const toNode = getMappedNodeId(seed.persona_index);
+          const path = findPath(1, toNode);
+          if (path.length > 1) {
+            setTimeout(() => {
+              spawnPathParticle(path, getNodeGroup(toNode), 0);
+            }, idx * 30); // slightly staggered
+          }
+        });
 
-      // Spawn signal particles from Node 1 (Input Gate)
-      destinations.forEach(hub => {
-        // Find a path of edges from Node 1 to the Hub
-        // To keep it simple and visual, we spawn multiple particles and direct them along connected nodes
-        for (let burst = 0; burst < 12; burst++) {
-          setTimeout(() => {
-            const path = findPath(1, hub.id);
+        // 2. Waves 1-4: Shares (staggered by wave index)
+        const maxWaveNum = Math.max(...shareEdges.map(e => e.wave), 0);
+        for (let waveNum = 0; waveNum <= maxWaveNum; waveNum++) {
+          const waveEdges = shareEdges.filter(e => e.wave === waveNum);
+          waveEdges.forEach((edge, idx) => {
+            const fromNode = getMappedNodeId(edge.from_index);
+            const toNode = getMappedNodeId(edge.to_index);
+            const path = findPath(fromNode, toNode);
             if (path.length > 1) {
-              spawnPathParticle(path, hub.group || "general", burst * 0.1);
+              setTimeout(() => {
+                spawnPathParticle(path, getNodeGroup(toNode), 0);
+              }, (waveNum + 1) * 700 + idx * 30); // 700ms stagger per wave
             }
-          }, burst * 150); // Staggered stream
+          });
         }
-      });
+      } else {
+        // --- MOCK FRONTEND HEURISTIC BLAST ---
+        // Determine active hubs based on selected groups
+        const activeHubs = brainNodes.filter(n => n.isHub && n.group && selectedGroups.includes(n.group));
+        
+        // If no groups are selected, route to general public
+        const destinations = activeHubs.length > 0 
+          ? activeHubs 
+          : [brainNodes.find(n => n.group === "general")!];
+
+        // Spawn signal particles from Node 1 (Input Gate)
+        destinations.forEach(hub => {
+          // Find a path of edges from Node 1 to the Hub
+          for (let burst = 0; burst < 12; burst++) {
+            setTimeout(() => {
+              const path = findPath(1, hub.id);
+              if (path.length > 1) {
+                spawnPathParticle(path, hub.group || "general", burst * 0.1);
+              }
+            }, burst * 150); // Staggered stream
+          }
+        });
+      }
     };
 
     // A simple DFS/BFS to find visual routing path
@@ -746,7 +794,7 @@ export function BrainSimulation({
       canvas.removeEventListener("click", handleCanvasClick);
       cancelAnimationFrame(animationId);
     };
-  }, [isActive, selectedGroups, riskScore, bgImage, hoveredNode]);
+  }, [isActive, selectedGroups, riskScore, bgImage, hoveredNode, agents, shareEdges]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-black/40 rounded-2xl border border-white/[0.04]">
