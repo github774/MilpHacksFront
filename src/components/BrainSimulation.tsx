@@ -5,6 +5,8 @@ interface BrainSimulationProps {
   isActive: boolean;
   selectedGroups: string[];
   riskScore: number;
+  selectedNodeId?: number | null;
+  onSelectNode?: (node: BrainNode | null) => void;
 }
 
 interface BrainNode {
@@ -99,7 +101,13 @@ const brainEdges: BrainEdge[] = [
   { from: 8, to: 13 }, { from: 15, to: 16 }, { from: 6, to: 13 }
 ];
 
-export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSimulationProps) {
+export function BrainSimulation({
+  isActive,
+  selectedGroups,
+  riskScore,
+  selectedNodeId,
+  onSelectNode
+}: BrainSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
@@ -153,6 +161,17 @@ export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSi
         case "caregivers": return `rgba(150, 150, 150, ${alpha})`; // Mid Grey
         case "general": return `rgba(100, 100, 100, ${alpha})`; // Dark Grey
         default: return `rgba(255, 255, 255, ${alpha})`;
+      }
+    };
+
+    // Persona emoji avatars
+    const getPersonaEmoji = (group: string): string => {
+      switch (group) {
+        case "teens": return "👦";
+        case "anxious": return "😰";
+        case "caregivers": return "🤲";
+        case "general": return "👥";
+        default: return "●";
       }
     };
 
@@ -369,6 +388,10 @@ export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSi
         const from = getNodeCoords(fromNode, width, height);
         const to = getNodeCoords(toNode, width, height);
 
+        // Highlight/Dim based on selection
+        const hasSelection = selectedNodeId !== undefined && selectedNodeId !== null;
+        const isConnectedToSelected = hasSelection && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+
         // Check if this connection belongs to an active path
         const isActiveEdge = isActive && (
           selectedGroups.some(group => {
@@ -383,7 +406,15 @@ export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSi
         ctx.moveTo(from.x, from.y);
         ctx.lineTo(to.x, to.y);
 
-        if (isActiveEdge) {
+        if (hasSelection) {
+          if (isConnectedToSelected) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.lineWidth = 1.8;
+          } else {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.01)";
+            ctx.lineWidth = 0.5;
+          }
+        } else if (isActiveEdge) {
           // Glow active pathways
           ctx.strokeStyle = getRiskColor(0.35 + Math.sin(globalTime * 3) * 0.1);
           ctx.lineWidth = 1.5;
@@ -446,57 +477,171 @@ export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSi
         }
       });
 
+      // 4.5 Draw Region Glow Zones behind hub areas
+      const hubNodes = brainNodes.filter(n => n.isHub);
+      hubNodes.forEach(hub => {
+        const { x, y } = getNodeCoords(hub, width, height);
+        const isGroupActive = hub.group && selectedGroups.includes(hub.group);
+        const glowAlpha = isGroupActive ? 0.06 + Math.sin(globalTime * 2) * 0.02 : 0.02;
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 65);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${glowAlpha})`);
+        gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 65, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
+      });
+
       // 5. Draw Nodes
+      const hasSelection = selectedNodeId !== undefined && selectedNodeId !== null;
+
       brainNodes.forEach(node => {
         const { x, y } = getNodeCoords(node, width, height);
         const isHovered = hoveredNode?.id === node.id;
+        const isSelected = selectedNodeId === node.id;
 
         // Hub status
         const isGroupActive = node.group && selectedGroups.includes(node.group);
+        const opacityMultiplier = hasSelection ? (isSelected ? 1.0 : 0.25) : 1.0;
 
         ctx.save();
-        ctx.beginPath();
-
-        let baseRadius = node.isHub ? 8 : 4;
-        let radius = baseRadius;
-        let color = "rgba(255, 255, 255, 0.2)";
-        let glowColor = "rgba(255, 255, 255, 0)";
 
         if (node.isHub) {
-          color = getGroupColor(node.group || "", 0.6);
-          glowColor = getGroupColor(node.group || "", 0.8);
-          // Pulsing animation
+          // --- ENHANCED HUB NODE ---
+          const baseRadius = 14;
           const pulseSpeed = isGroupActive ? 4 : 1.5;
-          const pulseScale = isGroupActive ? 2.5 : 1.2;
-          radius = baseRadius + Math.sin(globalTime * pulseSpeed) * pulseScale;
-        } else if (node.region === "input") {
-          color = "rgba(255, 255, 255, 0.7)";
-          glowColor = "rgba(255, 255, 255, 0.4)";
-          radius = baseRadius + Math.sin(globalTime * 2.5) * 1.5;
-        }
+          const pulseScale = isGroupActive ? 3 : 1.5;
+          const radius = baseRadius + Math.sin(globalTime * pulseSpeed) * pulseScale;
+          const groupColor = getGroupColor(node.group || "", 0.7 * opacityMultiplier);
+          const glowColor = getGroupColor(node.group || "", 0.9 * opacityMultiplier);
 
-        // Draw core node
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = isHovered ? "#ffffff" : color;
-        ctx.shadowBlur = node.isHub || isHovered ? 15 : 0;
-        ctx.shadowColor = isHovered ? "#ffffff" : glowColor;
-        ctx.fill();
+          // Animated orbit ring for active hubs
+          if (isGroupActive) {
+            ctx.beginPath();
+            const orbitRadius = radius + 10;
+            const startAngle = globalTime * 2;
+            ctx.arc(x, y, orbitRadius, startAngle, startAngle + Math.PI * 1.2);
+            ctx.strokeStyle = getGroupColor(node.group || "", 0.4 * opacityMultiplier);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
-        // Outermost border ring for active hubs
-        if (node.isHub && isGroupActive) {
+            // Second orbit (counter-rotating)
+            ctx.beginPath();
+            ctx.arc(x, y, orbitRadius + 4, -startAngle * 0.7, -startAngle * 0.7 + Math.PI * 0.8);
+            ctx.strokeStyle = getGroupColor(node.group || "", 0.2 * opacityMultiplier);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+
+          // Outer halo glow ring
           ctx.beginPath();
-          ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
-          ctx.strokeStyle = getGroupColor(node.group || "", 0.3);
+          ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
+          ctx.strokeStyle = getGroupColor(node.group || "", (isGroupActive ? 0.25 : 0.1) * opacityMultiplier);
           ctx.lineWidth = 1;
           ctx.stroke();
-        }
 
-        // Display hub labels
-        if (node.isHub) {
-          ctx.fillStyle = isGroupActive ? "#ffffff" : "rgba(255, 255, 255, 0.4)";
+          // Main filled circle
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = isHovered ? "#ffffff" : groupColor;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = isHovered ? "#ffffff" : glowColor;
+          ctx.fill();
+
+          // Darker inner circle for emoji background
+          ctx.beginPath();
+          ctx.arc(x, y, radius - 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * opacityMultiplier})`;
+          ctx.shadowBlur = 0;
+          ctx.fill();
+
+          // Emoji avatar
+          ctx.font = `${Math.round(radius * 0.9)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(getPersonaEmoji(node.group || ""), x, y + 1);
+
+          // Selected double-ring
+          if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 12, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+
+          // --- PILL-SHAPED LABEL BADGE ---
+          const label = node.label;
           ctx.font = "bold 10px 'Outfit', sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(node.label, x, y - radius - 8);
+          ctx.textBaseline = "middle";
+          const textWidth = ctx.measureText(label).width;
+          const pillW = textWidth + 14;
+          const pillH = 18;
+          const pillX = x - pillW / 2;
+          const pillY = y - radius - 20;
+
+          // Pill background
+          ctx.beginPath();
+          ctx.roundRect(pillX, pillY, pillW, pillH, 9);
+          ctx.fillStyle = isGroupActive
+            ? `rgba(255, 255, 255, ${0.12 * opacityMultiplier})`
+            : `rgba(255, 255, 255, ${0.04 * opacityMultiplier})`;
+          ctx.fill();
+          ctx.strokeStyle = isGroupActive
+            ? getGroupColor(node.group || "", 0.4 * opacityMultiplier)
+            : `rgba(255, 255, 255, ${0.08 * opacityMultiplier})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          // Pill text
+          ctx.fillStyle = isGroupActive
+            ? `rgba(255, 255, 255, ${1.0 * opacityMultiplier})`
+            : `rgba(255, 255, 255, ${0.45 * opacityMultiplier})`;
+          ctx.fillText(label, x, pillY + pillH / 2);
+
+        } else {
+          // --- STANDARD NODE ---
+          let baseRadius = 4;
+          let radius = baseRadius;
+          let color = `rgba(255, 255, 255, ${0.2 * opacityMultiplier})`;
+          let glowColor = `rgba(255, 255, 255, 0)`;
+
+          if (node.region === "input") {
+            color = `rgba(255, 255, 255, ${0.7 * opacityMultiplier})`;
+            glowColor = `rgba(255, 255, 255, ${0.4 * opacityMultiplier})`;
+            radius = baseRadius + Math.sin(globalTime * 2.5) * 1.5;
+          }
+
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = isHovered ? "#ffffff" : color;
+          ctx.shadowBlur = isHovered ? 15 : 0;
+          ctx.shadowColor = isHovered ? "#ffffff" : glowColor;
+          ctx.fill();
+
+          // Selected rings for non-hub nodes
+          if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
         }
 
         ctx.restore();
@@ -569,12 +714,36 @@ export function BrainSimulation({ isActive, selectedGroups, riskScore }: BrainSi
       setHoveredNode(found);
     };
 
+    // Canvas click node detection
+    const handleCanvasClick = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const width = canvas.width / window.devicePixelRatio;
+      const height = canvas.height / window.devicePixelRatio;
+
+      let found: BrainNode | null = null;
+      for (const node of brainNodes) {
+        const { x, y } = getNodeCoords(node, width, height);
+        const dist = Math.hypot(mouseX - x, mouseY - y);
+        const clickRadius = node.isHub ? 18 : 10;
+        if (dist < clickRadius) {
+          found = node;
+          break;
+        }
+      }
+      onSelectNode?.(found);
+    };
+
     canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("click", handleCanvasClick);
     draw();
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("click", handleCanvasClick);
       cancelAnimationFrame(animationId);
     };
   }, [isActive, selectedGroups, riskScore, bgImage, hoveredNode]);
