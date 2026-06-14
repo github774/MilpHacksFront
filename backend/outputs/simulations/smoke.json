@@ -1,0 +1,937 @@
+{
+  "schema_version": "1.1",
+  "format": "milphacks.network_simulation",
+  "generated_at": "2026-06-13T20:49:29.773304+00:00",
+  "taxonomy": {
+    "reaction_keys": [
+      "neutral",
+      "like",
+      "dislike",
+      "like_share",
+      "dislike_share"
+    ],
+    "emotion_keys": [
+      "empathy",
+      "relation",
+      "inspiration",
+      "curiosity",
+      "joy"
+    ],
+    "share_actions": [
+      "dislike_share",
+      "like_share"
+    ],
+    "like_actions": [
+      "like",
+      "like_share"
+    ],
+    "dislike_actions": [
+      "dislike",
+      "dislike_share"
+    ]
+  },
+  "simulation_rules": {
+    "seed_sampling": "Uniform random persona indices; with replacement when n_seeds exceeds catalog size.",
+    "share_recipients_per_event": "1-3 inclusive, uniform random.",
+    "share_target_selection": "Up to k random indices from the 64 most cosine-similar personas (excluding source); falls back to uniform random with replacement when exhausted.",
+    "re_exposure": "The same persona index may appear in multiple exposure events.",
+    "wave_limit": "Propagation stops after max_waves completed or when no pending shares remain.",
+    "action_sampling": "One action sampled from sharpened reaction probabilities per exposure."
+  },
+  "run_config": {
+    "transcript_jsonl": "transcripts/training_data.jsonl",
+    "record_index": 0,
+    "record_id": null,
+    "population": 3,
+    "seed": 7,
+    "persona_csv": "data/personas/nemotron_sample_10k.csv",
+    "embedding_csv": "data/personas/nemotron_sample_10k_embeddings_noname.csv",
+    "weights_path": "models/persona_pathpool.pt",
+    "device": null,
+    "batch_size": 128,
+    "max_waves": 1,
+    "sharpness": 2.5,
+    "output": "outputs/simulations/smoke.json",
+    "embed_model_name": "BAAI/bge-small-en-v1.5",
+    "n_seeds": 3
+  },
+  "catalog": {
+    "size": 10000,
+    "persona_csv": "data/personas/nemotron_sample_10k.csv",
+    "embedding_csv": "data/personas/nemotron_sample_10k_embeddings_noname.csv",
+    "referenced_persona_count": 6
+  },
+  "transcript": {
+    "source": "/Users/avneh/Code/milphacks/transcripts/training_data.jsonl",
+    "record_index": 0,
+    "record_id": null,
+    "id": "55498e3d88934a90",
+    "topic": "ai_tool",
+    "tone": "positive",
+    "language": "en",
+    "language_probability": 0.988294,
+    "duration": 20.12,
+    "segment_count": 3,
+    "text": "I almost cried the first time Mapleio actually worked for me. It turned a chore I dreaded into part of my routine I love. Real people built this for developers and writers, and you can feel it. The reviews aren't hype, they're people whose lives got easier. Try Mapleio today and see for yourself.",
+    "segments": [
+      {
+        "index": 0,
+        "text": "I almost cried the first time Mapleio actually worked for me. It turned a chore I dreaded into part of my routine I love.",
+        "start": 0.12,
+        "end": 9.01
+      },
+      {
+        "index": 1,
+        "text": "Real people built this for developers and writers, and you can feel it. The reviews aren't hype, they're people whose lives got easier.",
+        "start": 9.01,
+        "end": 17.53
+      },
+      {
+        "index": 2,
+        "text": "Try Mapleio today and see for yourself.",
+        "start": 17.53,
+        "end": 20.12
+      }
+    ],
+    "record": {
+      "id": "55498e3d88934a90",
+      "topic": "ai_tool",
+      "tone": "positive",
+      "language": "en",
+      "language_probability": 0.988294,
+      "duration": 20.12,
+      "text": "I almost cried the first time Mapleio actually worked for me. It turned a chore I dreaded into part of my routine I love. Real people built this for developers and writers, and you can feel it. The reviews aren't hype, they're people whose lives got easier. Try Mapleio today and see for yourself.",
+      "segments": [
+        {
+          "start": 0.12,
+          "end": 9.01,
+          "text": " I almost cried the first time Mapleio actually worked for me. It turned a chore I dreaded into part of my routine I love."
+        },
+        {
+          "start": 9.01,
+          "end": 17.53,
+          "text": " Real people built this for developers and writers, and you can feel it. The reviews aren't hype, they're people whose lives got easier."
+        },
+        {
+          "start": 17.53,
+          "end": 20.12,
+          "text": " Try Mapleio today and see for yourself."
+        }
+      ],
+      "reactions": {
+        "neutral": 0.1338,
+        "like": 0.6366,
+        "dislike": 0.1254,
+        "like_share": 0.0947,
+        "dislike_share": 0.0096
+      },
+      "emotions": {
+        "empathy": 0.4567,
+        "relation": 0.6187,
+        "inspiration": 0.4614,
+        "curiosity": 0.4437,
+        "joy": 0.6697
+      }
+    }
+  },
+  "personas": {
+    "1399": {
+      "persona_index": 1399,
+      "uuid": "20b78a9065674f85b065cbb1c52d8403",
+      "archetype": "not in workforce, age 19, female",
+      "occupation": "not_in_workforce",
+      "record": {
+        "uuid": "20b78a9065674f85b065cbb1c52d8403",
+        "professional_persona": "Theresa Snyder, a 19‑year‑old aspiring digital‑media student, blends curiosity‑driven sketching with practical Canva and Photoshop expertise to produce instantly shareable Instagram graphics, while their competitive streak fuels a side hustle of freelance logo work that they manage with spontaneous, flexible deadlines.",
+        "sports_persona": "Theresa Snyder enjoys spontaneous jogs through the city’s Riverfront Park, occasional weekend ultimate frisbee matches with the local ‘Trailblazers’ club, and follows the Golden State Warriors and Seattle Storm on TV, preferring low‑key, flexible exercise over regimented gym routines.",
+        "arts_persona": "Theresa Snyder’s artistic identity fuses sketching of urban street art inspired by Banksy with a love for alternative music from Tame Impala and The Strokes, while they channel competitive problem‑solving into DIY resin crafts and edit short video loops set to Austin Wintory’s game soundtracks.",
+        "travel_persona": "Theresa Snyder’s travel style favors budget‑friendly, spur‑of‑the‑moment trips, having explored the graffiti‑laden neighborhoods of Berlin on a student exchange, trekked the Red River Gorge on a weekend hike, and aspiring to visit Kyoto’s cherry‑blossom festivals and Barcelona’s street‑art districts, all while balancing limited funds and family expectations.",
+        "culinary_persona": "Theresa Snyder enjoys crafting avocado toast topped with feta and chili flakes, whipping up quick shrimp tacos with fresh cilantro and lime, and experimenting with homemade ramen broth seasoned with miso and kombu, though their cooking skill remains at a confident home‑cook level, often relying on YouTube tutorials for new recipes.",
+        "persona": "Theresa Snyder is a curious yet laid‑back 19‑year‑old visual creator who balances spontaneous freelance design gigs with disciplined budgeting, occasional health neglect, and a love for indie games, street art, and low‑key adventures.",
+        "cultural_background": "Theresa was raised in a middle‑class white, suburban family in Baldwin Park, where she was exposed to a multicultural environment, especially the Hispanic community. Her family observes traditional American holidays such as Thanksgiving and Christmas, often incorporating local influences, including participation in community festivals featuring Latino cuisine and music. She attended a local public high school, learning basic Spanish and developing an appreciation for the cultural diversity surrounding her.",
+        "skills_and_expertise": "Theresa has practical proficiency in basic computer operations, social media content creation, and graphic design using Canva and Adobe Photoshop. She can manage personal finances and budgeting, demonstrating competency in spreadsheet software (Microsoft Excel, Google Sheets). She also possesses strong analytical skills through solving puzzles and playing strategy video games, and can repair simple electronic devices like smartphones. Additionally, she has conversational-level Spanish from community interactions and an eye for detail in editing short videos for personal use.",
+        "skills_and_expertise_list": "['Basic computer literacy', 'Social media content creation', 'Graphic design (Canva, Photoshop)', 'Personal finance management', 'Spreadsheet proficiency (Excel, Google Sheets)', 'Strategic video gaming', 'Simple electronics repair', 'Conversational Spanish']",
+        "hobbies_and_interests": "Theresa enjoys solitary hobbies such as sketching, reading science‑fiction novels, and exploring indie video games that challenge her problem‑solving skills. She captures photos of local street art and goes on nature walks in nearby parks. Occasionally, she listens to alternative music and practices basic guitar chords. Her curiosity leads her to experiment with DIY crafts, while her preference for flexibility means she often engages in short, spontaneous creative sessions.",
+        "hobbies_and_interests_list": "['Sketching', 'Reading science fiction', 'Indie video gaming', 'Street art photography', 'Nature walks', 'Listening to alternative music', 'Playing guitar', 'DIY crafts']",
+        "career_goals_and_ambitions": "Theresa aspires to attend a community college to study digital media and graphic design, with a long‑term ambition to become a freelance visual designer or launch an e‑commerce boutique selling custom apparel. She seeks a flexible career that blends creative projects with practical income and hopes to build a personal brand on platforms like Instagram and TikTok.",
+        "sex": "Female",
+        "age": 19,
+        "marital_status": "never_married",
+        "education_level": "high_school",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Baldwin Park",
+        "state": "CA",
+        "zipcode": 91706,
+        "country": "USA"
+      }
+    },
+    "6250": {
+      "persona_index": 6250,
+      "uuid": "73b300a5d5cb44fd9cfec3745fba5ad0",
+      "archetype": "not in workforce, age 2, male",
+      "occupation": "not_in_workforce",
+      "record": {
+        "uuid": "73b300a5d5cb44fd9cfec3745fba5ad0",
+        "professional_persona": "Lamberto Santiago, a two-year-old miniature architect, methodically stacks colorful blocks and sorts shape-sorting toys with a precision that mirrors an early love for structure and predictability; they approach each tower with the same organized routine they follow during daily bedtime rituals.",
+        "sports_persona": "Lamberto Santiago proudly wears the Tiny Tigers toddler soccer jersey for the weekly playground drills, joyfully kicks soft foam balls in a predictable routine, and they enthusiastically cheer for the city's professional baseball team, the Harbor Hawks, whenever a game is on television.",
+        "arts_persona": "Lamberto Santiago delights in dancing to The Wiggles' Fruit Salad and humming Raffi's Baby Beluga, while they meticulously color within the lines of their activity books, arranging crayons by color to maintain order, and they often request a repeat of the Sesame Street segment for its familiar rhythm.",
+        "travel_persona": "Lamberto Santiago prefers carefully planned outings, eagerly counting down the days to the monthly trip to the city aquarium and the annual family vacation to the seaside resort of Clearwater, where they follow a strict schedule of beach sandcastle building and nap times, and they rarely enjoy surprise detours.",
+        "culinary_persona": "Lamberto Santiago's palate leans toward soft, familiar foods such as creamy macaroni and cheese, mashed banana, and smooth avocado toast, which they can eat with a spoon without spilling, yet they resist vegetables with tough skins like broccoli florets, and they proudly claim the golden chicken nuggets they earn after a tidy-up chore.",
+        "persona": "Lamberto Santiago is a meticulously organized two-year-old who lines up toys by color, worries intensely about small changes in routine, and habitually nags for extra bedtime stories whenever a day feels too predictable.",
+        "cultural_background": "Lamberto is a second‑generation Guatemalan‑American raised in Long Beach, California. At home his parents speak Spanish, celebrate Guatemalan holidays such as Semana Santa and Día de los Muertos, and prepare traditional foods like tamales, pupusas, and atol de elote. He is exposed to a vibrant Latino community, which reinforces his bilingual development and cultural identity. Family gatherings often include folk music, dance, and storytelling, providing Lamberto with a strong sense of his Guatemalan heritage while he also embraces the multicultural environment of Southern California.",
+        "skills_and_expertise": "Lamberto displays early developmental abilities typical for a two‑year‑old, yet his personality makes him unusually attentive to routine and order. He reliably follows daily schedules, such as mealtime and nap time, and enjoys repeating the same sequence of activities. He has solid basic motor skills for walking, running, and climbing, and fine‑motor coordination for stacking wooden blocks and turning pages. His bilingual language development is progressing quickly; he forms simple sentences in both Spanish and English. He also shows methodical problem‑solving when arranging puzzles or sorting objects by shape or colour, and he cooperates with peers while asserting his own choices.",
+        "skills_and_expertise_list": "[\"Basic motor skills (walking, running)\",\"Fine motor coordination (block stacking, puzzle solving)\",\"Early bilingual language (Spanish-English)\",\"Following routines and schedules\",\"Methodical problem solving (sorting, matching)\"]",
+        "hobbies_and_interests": "Lamberto enjoys structured play activities that satisfy his need for predictability. He spends hours building towers with wooden blocks, sorting crayons or shape‑sorting toys by colour and form, and listening to traditional Guatemalan lullabies and marimba music. He likes participating in community celebrations where he can help make simple papel picado cut‑outs, and he finds comfort in quiet picture‑book reading sessions with his parents. Outdoor sandbox time is also a favorite, especially when he can create patterns with shovels and molds.",
+        "hobbies_and_interests_list": "[\"Building towers with wooden blocks\", \"Sorting crayons and shape-sorting toys\", \"Listening to Guatemalan lullabies and marimba music\", \"Participating in community celebrations (making papel picado)\", \"Quiet picture-book reading with parents\", \"Sandbox pattern play\"]",
+        "career_goals_and_ambitions": "Although still a toddler, Lamberto already shows a budding desire to be a helper who brings order to his environment. He loves setting the table, arranging his toys, and eagerly asks to \"help\" during family chores. His caregivers notice that he imagines future roles that involve structure, such as a little teacher guiding play, a builder constructing block towers, or a team captain in preschool games. He also aspires to read simple picture books aloud to his family, reflecting his early ambition to share stories and knowledge.",
+        "sex": "Male",
+        "age": 2,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Long Beach",
+        "state": "CA",
+        "zipcode": 90815,
+        "country": "USA"
+      }
+    },
+    "6344": {
+      "persona_index": 6344,
+      "uuid": "35e41d3ab40843319c7d2c1f8768d097",
+      "archetype": "not in workforce, age 13, female",
+      "occupation": "not_in_workforce",
+      "record": {
+        "uuid": "35e41d3ab40843319c7d2c1f8768d097",
+        "professional_persona": "Narja, a budding visual storyteller, merges watercolor sketches with digital illustration and Scratch programming to prototype interactive comic panels for school projects, channeling their curiosity and cooperative nature into collaborative art clubs while sometimes over‑thinking deadlines.",
+        "sports_persona": "Narja, an energetic pick‑up basketball enthusiast, joins the community center’s after‑school hoop sessions, follows the NBA’s Los Angeles Lakers, and balances weekend games with occasional jogs while listening to R&B playlists.",
+        "arts_persona": "Narja, a fervent fan of graphic novels, draws inspiration from manga creator Eiichiro Oda, the sketchy style of Katsuhiro Otomo, and the vibrant street art of Banksy, while curating weekly playlists of Afrobeat stars like Burna Boy and hip‑hop icons such as Kendrick Lamar to fuel their creative flow.",
+        "travel_persona": "Narja, a curious explorer, prefers short family trips that blend cultural immersion with artistic inspiration, dreaming of wandering the Louvre’s exhibition halls in Paris, strolling the colorful souks of Marrakech, and visiting the Smithsonian’s National Portrait Gallery on future school breaks.",
+        "culinary_persona": "Narja, an enthusiastic home‑chef, delights in helping to prepare a fragrant fish‑and‑rice stew with tomato and vegetables (thieboudienne), experiments with fresh mango salsa, and often pairs their creations with homemade ginger‑spiced tea while occasionally indulging in cheesy pizza slices on lazy weekends.",
+        "persona": "Narja, a creatively restless teen, channels curiosity into art, coding, and dance, constantly juggles meticulous planning with bouts of worry that sometimes delay their projects.",
+        "cultural_background": "Narja is a first‑generation American of Senegalese descent; her family maintains cultural traditions such as speaking Wolof and French at home, celebrating Tabaski and Eid, and preparing dishes like thieboudienne. Growing up in Springfield Gardens, Queens, she experiences a vibrant multicultural environment that includes a large African diaspora, Caribbean communities, and diverse immigrant neighborhoods. These cultural roots nurture her love for rhythm, storytelling, and visual expression, while the city’s artistic scene fuels her curiosity and openness to new ideas.",
+        "skills_and_expertise": "Narja has built a solid foundation in visual arts, especially drawing and digital illustration, and enjoys crafting stories through creative writing. She is comfortable using basic coding platforms like Scratch to create simple interactive projects. Her schoolwork shows strong organization and time‑management; she keeps meticulous notes, coordinates group assignments, and reliably meets deadlines. Narja’s empathy and communication abilities enable her to mediate peer conflicts and work cooperatively in team settings. She reads and writes fluently in English and speaks conversational Wolof at home, reflecting her Senegalese heritage, and she is developing confidence in public speaking and storytelling.",
+        "skills_and_expertise_list": "['drawing', 'digital illustration', 'creative writing', 'basic coding (Scratch)', 'storytelling', 'team collaboration', 'project organization', 'English literacy', 'basic Wolof', 'public speaking']",
+        "hobbies_and_interests": "In her free time, Narja loves sketching characters in her notebook, experimenting with watercolor and digital illustration tools, and immersing herself in graphic novels from diverse cultures. She listens to a mix of Afrobeat, hip‑hop, and R&B, and often practices dance moves with friends. Narja creates simple interactive stories using Scratch, writes short fiction for her personal blog, and volunteers at the community center, assisting younger children with arts‑craft activities. Weekends often find her exploring nearby museum exhibitions, playing pick‑up basketball, and helping her family prepare traditional Senegalese dishes like thieboudienne.",
+        "hobbies_and_interests_list": "['sketching', 'painting', 'reading graphic novels', 'listening to Afrobeat and hip‑hop', 'coding simple games in Scratch', 'writing short stories', 'jazz dancing', 'volunteering at community center', 'attending local museum exhibitions', 'playing basketball with friends']",
+        "career_goals_and_ambitions": "Narja dreams of turning her passion for art and storytelling into a career that helps others. She aims to enroll in a high‑school program with a strong visual‑arts track, later study graphic design or illustration at university, and eventually work as an illustrator or art therapist. She is also drawn to community outreach, envisioning a role where she designs workshops that blend art, technology, and mental‑wellness for youth in her neighborhood. In the short term, she plans to expand her portfolio, win a school art competition, and secure a mentorship with a local artist.",
+        "sex": "Female",
+        "age": 13,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Springfield Gardens",
+        "state": "NY",
+        "zipcode": 11413,
+        "country": "USA"
+      }
+    },
+    "6841": {
+      "persona_index": 6841,
+      "uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "archetype": "not in workforce, age 12, male",
+      "occupation": "not_in_workforce",
+      "record": {
+        "uuid": "d2b98cff42c54592bf00b957d294ce01",
+        "professional_persona": "Boland Hower, an aspiring multidisciplinary creator blending street art sketching with early‑stage digital design, uses a disciplined yet flexible workflow cultivated in their art and robotics clubs; they channel their curiosity and calm resilience into collaborative projects that fuse visual storytelling with interactive media.",
+        "sports_persona": "Boland Hower, an enthusiastic participant in Saturday morning school soccer and New York City street basketball, cheers for the New York Knicks and New York City FC; they also join a local skate‑park crew for freestyle sessions, blending physical activity with an artistic eye for urban environments.",
+        "arts_persona": "Boland Hower, a dedicated teen artist, immerses themselves in contemporary masterpieces at MoMA and the Met, drawing inspiration from street legends like Banksy, Basquiat, and Keith Haring; they spend evenings playing Debussy on piano while sketching futuristic cityscapes on their tablet, weaving these influences into digital murals.",
+        "travel_persona": "Boland Hower, an adventurous twelve‑year-old, prefers weekend day trips to Hudson River parks for plein‑air sketching, has visited Washington, D.C.’s Smithsonian museums, and dreams of exploring Tokyo’s Akihabara for anime culture; they plan family trips that balance budget‑friendly road trips with occasional international school tours.",
+        "culinary_persona": "Boland Hower, a budding home‑chef, favors creating their own Margherita pizza with fresh basil from the community garden, enjoys DIY sushi rolls with avocado and cucumber, and experiments with tofu stir‑fry seasoned with ginger; they love snacking on crunchy kale chips while listening to lo‑fi beats.",
+        "persona": "Boland Hower blends a calm, curious mind with a love for street art, robotics, and piano, balancing disciplined savings and health routines while sprinkling their days with impulsive art‑supply splurges and occasional screen‑time procrastination; they remain resilient and cooperative in group projects yet assertive when defending their creative vision.",
+        "cultural_background": "Boland was raised in a white, middle‑class family in New York City. His family celebrates traditional American holidays such as Thanksgiving, Christmas, and Independence Day, and they value education, curiosity, and cultural exposure. Growing up in Manhattan’s diverse neighborhoods, he has been immersed in a multicultural environment, regularly attending city events, museum programs, and community festivals that showcase a wide range of cultural traditions. This urban upbringing has fostered an inclusive outlook, a deep appreciation for artistic expression across cultures, and a comfort navigating a richly varied social landscape.",
+        "skills_and_expertise": "Boland has a solid academic base in reading comprehension, creative writing, and basic mathematics. His curiosity about art drives strong sketching abilities and digital illustration skills using tablet apps such as Procreate. He has cultivated basic photography techniques and explores visual storytelling through comics and storyboards. In the realm of technology, he is proficient with block‑based programming in Scratch and enjoys building simple robots in his school’s robotics club. He plays piano at a beginner level and applies his balanced organization to manage school assignments, extracurricular projects, and personal creative endeavors. His collaborative experiences have sharpened team‑working, leadership, and problem‑solving skills.",
+        "skills_and_expertise_list": "['Reading comprehension', 'Creative writing', 'Basic mathematics', 'Sketching', 'Digital illustration (Procreate)', 'Photography basics', 'Scratch programming', 'Simple robotics', 'Beginner piano', 'Time management', 'Project planning', 'Team collaboration', 'Leadership in group projects']",
+        "hobbies_and_interests": "Boland spends his free time drawing street scenes, painting characters, and experimenting with digital art on his tablet. He regularly visits the Metropolitan Museum of Art and MoMA, where he studies contemporary works and participates in youth workshops. He reads science‑fiction and fantasy novels, plays piano, and enjoys building simple robots and coding games in Scratch. He explores neighborhood graffiti and street art, plays creative video games like Minecraft, and participates in his school’s after‑school art club and robotics club. On weekends, he volunteers at a community garden, learning about sustainable practices and urban ecology.",
+        "hobbies_and_interests_list": "['Sketching', 'Digital painting', 'Museum visits', 'Reading sci‑fi/fantasy novels', 'Playing piano', 'Robotics club', 'Scratch programming', 'Exploring street art', 'Minecraft', 'After‑school art club', 'Community garden volunteering']",
+        "career_goals_and_ambitions": "Boland aspires to attend a specialized arts high school in New York City, such as LaGuardia High School, to deepen his visual art and design talents. He envisions a future as a digital illustrator, graphic designer, or interactive media artist, potentially working in animation, video‑game development, or museum curation. His calm and resilient nature fuels long‑term planning: he aims to earn a BFA in Visual Arts, later pursue a master’s degree in Interactive Design, and create inclusive, culturally rich visual experiences that merge creativity with technology. He also keeps an open mind to unconventional career paths that blend art, science, and community engagement.",
+        "sex": "Male",
+        "age": 12,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "New York",
+        "state": "NY",
+        "zipcode": 10024,
+        "country": "USA"
+      }
+    },
+    "8659": {
+      "persona_index": 8659,
+      "uuid": "4dd9f910e74a47e99a085fcb2858f9c6",
+      "archetype": "not in workforce, age 17, female",
+      "occupation": "not_in_workforce",
+      "record": {
+        "uuid": "4dd9f910e74a47e99a085fcb2858f9c6",
+        "professional_persona": "Suzanne Schmidt is a budding graphic design enthusiast who leverages their strong public speaking and peer‑mediating skills to lead school art‑club meetings and run social‑media campaigns for local charity events, channeling their curiosity and love of community into organized yet adaptable project plans that often make them the lively focal point of any creative collaboration.",
+        "sports_persona": "Suzanne Schmidt enjoys low‑impact fitness through weekly yoga classes at the community center, follows the local minor‑league baseball team the River Rats and the city’s women’s soccer club for occasional weekend games, and occasionally participates in a high‑school intramural volleyball league to stay active and socialize, and they often cheer loudly with their teammates.",
+        "arts_persona": "Suzanne Schmidt spends free hours sketching plein‑air landscapes inspired by Monet and experimenting with digital illustrations reminiscent of contemporary artist LOISH, curates playlists featuring artists like Phoebe Bridgers and Bon Iver, and regularly attends productions by the town’s community theater, especially plays by Lin‑Manuel Miranda, which fuel their passion for storytelling through visual media, and they love the immersive experience.",
+        "travel_persona": "Suzanne Schmidt has taken a school art‑history field trip to Washington, D.C., visited the Grand Canyon on a summer family road‑trip, and dreams of backpacking through Florence and the Tuscan countryside to study Renaissance frescoes, preferring a mix of planned itineraries and spontaneous detours that allow them to capture photographs for their sketchbooks.",
+        "culinary_persona": "Suzanne Schmidt prefers quick yet wholesome meals like avocado toast with chili flakes, bowls of vegan buddha bowls topped with roasted chickpeas, and occasionally indulges in late‑night pizza slices while binge‑watching documentaries, but they struggle to resist the lure of sugary cereal at midnight and often forget to prep balanced lunches for school.",
+        "persona": "Suzanne Schmidt is a talkative, art‑obsessed teen who balances meticulous planning with spontaneous creativity, yet wrestles with anxiety‑driven worry and a habit of late‑night snack binges, making them both a vibrant community catalyst and a self‑critical perfectionist.",
+        "cultural_background": "Suzanne comes from a German‑American family that has lived in Ravenna, Ohio for generations. Raised in a close‑knit Midwestern town, she grew up attending a Protestant church and participating in community festivals that celebrate local folk traditions. The values of modesty, hard work, and neighborly support common in the region have shaped her cooperative nature, while her family's appreciation for handmade crafts and storytelling sparked her early interest in visual arts. Though rooted in these local customs, her curiosity drives her to explore broader cultural ideas through art, music, and digital media.",
+        "skills_and_expertise": "Suzanne boasts strong interpersonal communication and public speaking abilities, honed through school theater and community events. She is adept at organizing small gatherings, managing social media content for her friend group, and creating digital illustrations using basic graphic design tools. Her empathy and conflict‑resolution skills make her a natural peer mediator, and she demonstrates reliable time‑management and flexibility in balancing schoolwork, extracurricular projects, and volunteer commitments.",
+        "skills_and_expertise_list": "['Public speaking', 'Interpersonal communication', 'Event planning', 'Digital illustration', 'Social media content creation', 'Peer mediation', 'Creative writing', 'Basic graphic design', 'Time management', 'Adaptability']",
+        "hobbies_and_interests": "Her free time is filled with sketching landscapes, experimenting with digital art, and attending local theater productions. She enjoys curating playlists, exploring podcasts about psychology and art history, and volunteering at the town's community garden. To manage stress, Suzanne practices yoga, journaling, and occasionally writes poetry that reflects her inner worries and hopes.",
+        "hobbies_and_interests_list": "['Sketching', 'Digital art', 'Theater attendance', 'Curating music playlists', 'Listening to psychology and art podcasts', 'Volunteering at community garden', 'Yoga', 'Journaling', 'Poetry writing']",
+        "career_goals_and_ambitions": "Suzanne aspires to study graphic design and community outreach at a local college, aiming to combine her artistic talent with her love for helping others. She envisions a career as a communications coordinator for a nonprofit arts center, where she can develop programs that use visual arts to support mental‑health awareness among teens. In the long term, she hopes to lead workshops that empower young people to express themselves creatively while fostering a supportive community environment.",
+        "sex": "Female",
+        "age": 17,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Ravenna",
+        "state": "OH",
+        "zipcode": 44266,
+        "country": "USA"
+      }
+    },
+    "9447": {
+      "persona_index": 9447,
+      "uuid": "7eb335f4ff9848cf8fa498c89b1cc089",
+      "archetype": "management analyst, age 57, female",
+      "occupation": "management_analyst",
+      "record": {
+        "uuid": "7eb335f4ff9848cf8fa498c89b1cc089",
+        "professional_persona": "Daphane Beaver, a seasoned business analyst with a knack for strategic planning, Lean Six Sigma process optimization, and data storytelling through Tableau, blends curiosity for new analytical techniques with a methodical, ROI-focused mindset, and they position themselves as a natural candidate for senior leadership while mentoring junior analysts with a pragmatic, yet encouraging, approach.",
+        "sports_persona": "Daphane Beaver, a dedicated member of the Finger Lakes Hiking Association, tackles the region’s seasonal trail challenges with a steady cadence, occasionally joins a local tennis league in the spring, and they follow the Buffalo Bills and New York Knicks with a friendly rivalry that motivates their weekend-cardio sessions.",
+        "arts_persona": "Daphane Beaver, an avid participant in a community book club, finds artistic solace in the historical novels of Hilary Mantel, the piano works of Ludovico Einaudi, and the local productions of the Rochester Shakespeare Festival, while they curate a modest collection of vintage botanical illustration prints that inspire both garden design and creative problem-solving.",
+        "travel_persona": "Daphane Beaver prefers meticulously planned getaways that balance leisure and learning, having trekked the vineyards of Tuscany, explored the botanical gardens of Kyoto for heirloom seed inspiration, and regularly weekend-escapes to the Finger Lakes’ wineries, yet they keep a travel budget that prioritizes off-season deals to fund their next educational pilgrimage.",
+        "culinary_persona": "Daphane Beaver, a self-taught farm-to-table chef, delights in crafting seasonal dishes like roasted heirloom carrots with rosemary-infused quinoa, grilled trout paired with pickled daikon, and a summer ratatouille featuring zucchini, tomato, and basil, while they occasionally over-season, reflecting a curiosity that sometimes outpaces their measured palate.",
+        "persona": "Daphane Beaver is a methodical, curiosity-driven analyst who channels stress into gardening, yoga, and meticulous budgeting, and they often juggle a love for heirloom vegetables with a habit of over-planning every project and vacation.",
+        "cultural_background": "Daphane grew up in the small-town environment of upstate New York, a region with deep Anglo-American roots and a strong sense of community. Her family heritage blends German and Irish ancestry, reflecting the typical settlement patterns of Steuben County. This background instilled values of hard work, self-reliance, and civic involvement, while her graduate business education exposed her to broader national and global perspectives. She maintains a balance between honoring local traditions—such as attending the county fair and supporting the local farmers' market—and embracing new ideas through continued learning and community service.",
+        "skills_and_expertise": "Daphane has built a comprehensive skill set in business analysis and organizational improvement. Her expertise includes strategic planning, quantitative data analysis, financial modeling, and process optimization using Lean and Six Sigma methodologies. She is proficient in project management, stakeholder communication, risk assessment, and data visualization tools such as Tableau and Power BI, and she complements these technical abilities with strong written and presentation skills.",
+        "skills_and_expertise_list": "['Strategic planning', 'Quantitative data analysis', 'Financial modeling', 'Process improvement (Lean/Six Sigma)', 'Project management', 'Stakeholder communication', 'Risk assessment', 'Change management', 'Data visualization (Tableau, Power BI)', 'Advanced Excel & SQL', 'Performance metrics development', 'Business reporting']",
+        "hobbies_and_interests": "Outside of work, Daphane balances curiosity with practicality in her leisure pursuits. She enjoys gardening heirloom vegetables and ornamental plants, experimenting with seasonal recipes, and hiking the nearby Finger Lakes trails. Her solitary interests include reading business books and historical fiction, solving crosswords and Sudoku, and researching her family genealogy. She also participates in a local book club, volunteers as a mentor at the community center, and practices yoga and mindfulness to manage stress.",
+        "hobbies_and_interests_list": "['Gardening (heirloom vegetables and ornamental plants)', 'Hiking and Finger Lakes nature walks', 'Reading (business books and historical fiction)', 'Crossword and Sudoku puzzles', 'Genealogy research', 'Seasonal cooking and baking', 'Volunteer mentoring at the community center', 'Yoga and mindfulness meditation', 'Knitting', 'Book club participation']",
+        "career_goals_and_ambitions": "Daphane aims to transition into a senior leadership role where she can shape the strategic direction of her organization, such as a Director of Business Analytics or a senior consultant specializing in data-driven transformation. She wants to spearhead digital initiatives that improve operational efficiency while maintaining a clear ROI, and she is passionate about mentoring the next generation of analysts. Over the next five years she plans to earn a PMP certification, publish articles on best practices in change management, and gradually scale back her hours to achieve a healthier work-life balance that reduces stress.",
+        "sex": "Female",
+        "age": 57,
+        "marital_status": "married_present",
+        "education_level": "graduate",
+        "bachelors_field": "business",
+        "occupation": "management_analyst",
+        "city": "Painted Post",
+        "state": "NY",
+        "zipcode": 14870,
+        "country": "USA"
+      }
+    }
+  },
+  "summary": {
+    "total_exposed": 6,
+    "unique_personas_exposed": 6,
+    "seeds_requested": 3,
+    "seeds_exposed": 3,
+    "viral_exposed": 3,
+    "waves_completed": 2,
+    "likes": 5,
+    "dislikes": 0,
+    "like_shares": 1,
+    "dislike_shares": 0,
+    "share_events": 1,
+    "share_recipients": 3,
+    "share_recipients_simulated": 3,
+    "share_recipients_dropped": 0,
+    "neutral": 0,
+    "action_counts": {
+      "like": 5,
+      "like_share": 1
+    }
+  },
+  "top_liked_archetypes": [
+    {
+      "archetype": "management analyst, age 57, female",
+      "count": 1
+    }
+  ],
+  "top_disliked_archetypes": [],
+  "seed_indices": [
+    9447,
+    6250,
+    6841
+  ],
+  "seed_indices_requested": 3,
+  "agents": [
+    {
+      "exposure_id": 0,
+      "persona_index": 9447,
+      "uuid": "7eb335f4ff9848cf8fa498c89b1cc089",
+      "archetype": "management analyst, age 57, female",
+      "occupation": "management_analyst",
+      "persona": {
+        "uuid": "7eb335f4ff9848cf8fa498c89b1cc089",
+        "professional_persona": "Daphane Beaver, a seasoned business analyst with a knack for strategic planning, Lean Six Sigma process optimization, and data storytelling through Tableau, blends curiosity for new analytical techniques with a methodical, ROI-focused mindset, and they position themselves as a natural candidate for senior leadership while mentoring junior analysts with a pragmatic, yet encouraging, approach.",
+        "sports_persona": "Daphane Beaver, a dedicated member of the Finger Lakes Hiking Association, tackles the region’s seasonal trail challenges with a steady cadence, occasionally joins a local tennis league in the spring, and they follow the Buffalo Bills and New York Knicks with a friendly rivalry that motivates their weekend-cardio sessions.",
+        "arts_persona": "Daphane Beaver, an avid participant in a community book club, finds artistic solace in the historical novels of Hilary Mantel, the piano works of Ludovico Einaudi, and the local productions of the Rochester Shakespeare Festival, while they curate a modest collection of vintage botanical illustration prints that inspire both garden design and creative problem-solving.",
+        "travel_persona": "Daphane Beaver prefers meticulously planned getaways that balance leisure and learning, having trekked the vineyards of Tuscany, explored the botanical gardens of Kyoto for heirloom seed inspiration, and regularly weekend-escapes to the Finger Lakes’ wineries, yet they keep a travel budget that prioritizes off-season deals to fund their next educational pilgrimage.",
+        "culinary_persona": "Daphane Beaver, a self-taught farm-to-table chef, delights in crafting seasonal dishes like roasted heirloom carrots with rosemary-infused quinoa, grilled trout paired with pickled daikon, and a summer ratatouille featuring zucchini, tomato, and basil, while they occasionally over-season, reflecting a curiosity that sometimes outpaces their measured palate.",
+        "persona": "Daphane Beaver is a methodical, curiosity-driven analyst who channels stress into gardening, yoga, and meticulous budgeting, and they often juggle a love for heirloom vegetables with a habit of over-planning every project and vacation.",
+        "cultural_background": "Daphane grew up in the small-town environment of upstate New York, a region with deep Anglo-American roots and a strong sense of community. Her family heritage blends German and Irish ancestry, reflecting the typical settlement patterns of Steuben County. This background instilled values of hard work, self-reliance, and civic involvement, while her graduate business education exposed her to broader national and global perspectives. She maintains a balance between honoring local traditions—such as attending the county fair and supporting the local farmers' market—and embracing new ideas through continued learning and community service.",
+        "skills_and_expertise": "Daphane has built a comprehensive skill set in business analysis and organizational improvement. Her expertise includes strategic planning, quantitative data analysis, financial modeling, and process optimization using Lean and Six Sigma methodologies. She is proficient in project management, stakeholder communication, risk assessment, and data visualization tools such as Tableau and Power BI, and she complements these technical abilities with strong written and presentation skills.",
+        "skills_and_expertise_list": "['Strategic planning', 'Quantitative data analysis', 'Financial modeling', 'Process improvement (Lean/Six Sigma)', 'Project management', 'Stakeholder communication', 'Risk assessment', 'Change management', 'Data visualization (Tableau, Power BI)', 'Advanced Excel & SQL', 'Performance metrics development', 'Business reporting']",
+        "hobbies_and_interests": "Outside of work, Daphane balances curiosity with practicality in her leisure pursuits. She enjoys gardening heirloom vegetables and ornamental plants, experimenting with seasonal recipes, and hiking the nearby Finger Lakes trails. Her solitary interests include reading business books and historical fiction, solving crosswords and Sudoku, and researching her family genealogy. She also participates in a local book club, volunteers as a mentor at the community center, and practices yoga and mindfulness to manage stress.",
+        "hobbies_and_interests_list": "['Gardening (heirloom vegetables and ornamental plants)', 'Hiking and Finger Lakes nature walks', 'Reading (business books and historical fiction)', 'Crossword and Sudoku puzzles', 'Genealogy research', 'Seasonal cooking and baking', 'Volunteer mentoring at the community center', 'Yoga and mindfulness meditation', 'Knitting', 'Book club participation']",
+        "career_goals_and_ambitions": "Daphane aims to transition into a senior leadership role where she can shape the strategic direction of her organization, such as a Director of Business Analytics or a senior consultant specializing in data-driven transformation. She wants to spearhead digital initiatives that improve operational efficiency while maintaining a clear ROI, and she is passionate about mentoring the next generation of analysts. Over the next five years she plans to earn a PMP certification, publish articles on best practices in change management, and gradually scale back her hours to achieve a healthier work-life balance that reduces stress.",
+        "sex": "Female",
+        "age": 57,
+        "marital_status": "married_present",
+        "education_level": "graduate",
+        "bachelors_field": "business",
+        "occupation": "management_analyst",
+        "city": "Painted Post",
+        "state": "NY",
+        "zipcode": 14870,
+        "country": "USA"
+      },
+      "wave": 0,
+      "exposed_by_index": null,
+      "exposed_by_uuid": null,
+      "exposed_by_share_type": null,
+      "reaction_probs": {
+        "neutral": 0.013525232672691345,
+        "like": 0.8098630309104919,
+        "dislike": 0.0013753778766840696,
+        "like_share": 0.1751435399055481,
+        "dislike_share": 9.286993008572608e-05
+      },
+      "emotion_probs": {
+        "empathy": 0.737873911857605,
+        "relation": 0.8025051355361938,
+        "inspiration": 0.5014345049858093,
+        "curiosity": 0.47475120425224304,
+        "joy": 0.8421875834465027
+      },
+      "segment_weights": [
+        0.14973439276218414,
+        0.7602464556694031,
+        0.09001915156841278
+      ],
+      "affinity": 0.6171174645423889,
+      "affinity_s": 1.6971067190170288,
+      "sampled_action": "like",
+      "shared_to_indices": [],
+      "shared_to_uuids": []
+    },
+    {
+      "exposure_id": 1,
+      "persona_index": 6250,
+      "uuid": "73b300a5d5cb44fd9cfec3745fba5ad0",
+      "archetype": "not in workforce, age 2, male",
+      "occupation": "not_in_workforce",
+      "persona": {
+        "uuid": "73b300a5d5cb44fd9cfec3745fba5ad0",
+        "professional_persona": "Lamberto Santiago, a two-year-old miniature architect, methodically stacks colorful blocks and sorts shape-sorting toys with a precision that mirrors an early love for structure and predictability; they approach each tower with the same organized routine they follow during daily bedtime rituals.",
+        "sports_persona": "Lamberto Santiago proudly wears the Tiny Tigers toddler soccer jersey for the weekly playground drills, joyfully kicks soft foam balls in a predictable routine, and they enthusiastically cheer for the city's professional baseball team, the Harbor Hawks, whenever a game is on television.",
+        "arts_persona": "Lamberto Santiago delights in dancing to The Wiggles' Fruit Salad and humming Raffi's Baby Beluga, while they meticulously color within the lines of their activity books, arranging crayons by color to maintain order, and they often request a repeat of the Sesame Street segment for its familiar rhythm.",
+        "travel_persona": "Lamberto Santiago prefers carefully planned outings, eagerly counting down the days to the monthly trip to the city aquarium and the annual family vacation to the seaside resort of Clearwater, where they follow a strict schedule of beach sandcastle building and nap times, and they rarely enjoy surprise detours.",
+        "culinary_persona": "Lamberto Santiago's palate leans toward soft, familiar foods such as creamy macaroni and cheese, mashed banana, and smooth avocado toast, which they can eat with a spoon without spilling, yet they resist vegetables with tough skins like broccoli florets, and they proudly claim the golden chicken nuggets they earn after a tidy-up chore.",
+        "persona": "Lamberto Santiago is a meticulously organized two-year-old who lines up toys by color, worries intensely about small changes in routine, and habitually nags for extra bedtime stories whenever a day feels too predictable.",
+        "cultural_background": "Lamberto is a second‑generation Guatemalan‑American raised in Long Beach, California. At home his parents speak Spanish, celebrate Guatemalan holidays such as Semana Santa and Día de los Muertos, and prepare traditional foods like tamales, pupusas, and atol de elote. He is exposed to a vibrant Latino community, which reinforces his bilingual development and cultural identity. Family gatherings often include folk music, dance, and storytelling, providing Lamberto with a strong sense of his Guatemalan heritage while he also embraces the multicultural environment of Southern California.",
+        "skills_and_expertise": "Lamberto displays early developmental abilities typical for a two‑year‑old, yet his personality makes him unusually attentive to routine and order. He reliably follows daily schedules, such as mealtime and nap time, and enjoys repeating the same sequence of activities. He has solid basic motor skills for walking, running, and climbing, and fine‑motor coordination for stacking wooden blocks and turning pages. His bilingual language development is progressing quickly; he forms simple sentences in both Spanish and English. He also shows methodical problem‑solving when arranging puzzles or sorting objects by shape or colour, and he cooperates with peers while asserting his own choices.",
+        "skills_and_expertise_list": "[\"Basic motor skills (walking, running)\",\"Fine motor coordination (block stacking, puzzle solving)\",\"Early bilingual language (Spanish-English)\",\"Following routines and schedules\",\"Methodical problem solving (sorting, matching)\"]",
+        "hobbies_and_interests": "Lamberto enjoys structured play activities that satisfy his need for predictability. He spends hours building towers with wooden blocks, sorting crayons or shape‑sorting toys by colour and form, and listening to traditional Guatemalan lullabies and marimba music. He likes participating in community celebrations where he can help make simple papel picado cut‑outs, and he finds comfort in quiet picture‑book reading sessions with his parents. Outdoor sandbox time is also a favorite, especially when he can create patterns with shovels and molds.",
+        "hobbies_and_interests_list": "[\"Building towers with wooden blocks\", \"Sorting crayons and shape-sorting toys\", \"Listening to Guatemalan lullabies and marimba music\", \"Participating in community celebrations (making papel picado)\", \"Quiet picture-book reading with parents\", \"Sandbox pattern play\"]",
+        "career_goals_and_ambitions": "Although still a toddler, Lamberto already shows a budding desire to be a helper who brings order to his environment. He loves setting the table, arranging his toys, and eagerly asks to \"help\" during family chores. His caregivers notice that he imagines future roles that involve structure, such as a little teacher guiding play, a builder constructing block towers, or a team captain in preschool games. He also aspires to read simple picture books aloud to his family, reflecting his early ambition to share stories and knowledge.",
+        "sex": "Male",
+        "age": 2,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Long Beach",
+        "state": "CA",
+        "zipcode": 90815,
+        "country": "USA"
+      },
+      "wave": 0,
+      "exposed_by_index": null,
+      "exposed_by_uuid": null,
+      "exposed_by_share_type": null,
+      "reaction_probs": {
+        "neutral": 0.10949939489364624,
+        "like": 0.6807432770729065,
+        "dislike": 0.07479361444711685,
+        "like_share": 0.129161536693573,
+        "dislike_share": 0.005802195984870195
+      },
+      "emotion_probs": {
+        "empathy": 0.6791369915008545,
+        "relation": 0.7029608488082886,
+        "inspiration": 0.5830956101417542,
+        "curiosity": 0.5625162720680237,
+        "joy": 0.7476351261138916
+      },
+      "segment_weights": [
+        0.15050199627876282,
+        0.7590675950050354,
+        0.09043034166097641
+      ],
+      "affinity": 0.5634571313858032,
+      "affinity_s": 0.31766363978385925,
+      "sampled_action": "like",
+      "shared_to_indices": [],
+      "shared_to_uuids": []
+    },
+    {
+      "exposure_id": 2,
+      "persona_index": 6841,
+      "uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "archetype": "not in workforce, age 12, male",
+      "occupation": "not_in_workforce",
+      "persona": {
+        "uuid": "d2b98cff42c54592bf00b957d294ce01",
+        "professional_persona": "Boland Hower, an aspiring multidisciplinary creator blending street art sketching with early‑stage digital design, uses a disciplined yet flexible workflow cultivated in their art and robotics clubs; they channel their curiosity and calm resilience into collaborative projects that fuse visual storytelling with interactive media.",
+        "sports_persona": "Boland Hower, an enthusiastic participant in Saturday morning school soccer and New York City street basketball, cheers for the New York Knicks and New York City FC; they also join a local skate‑park crew for freestyle sessions, blending physical activity with an artistic eye for urban environments.",
+        "arts_persona": "Boland Hower, a dedicated teen artist, immerses themselves in contemporary masterpieces at MoMA and the Met, drawing inspiration from street legends like Banksy, Basquiat, and Keith Haring; they spend evenings playing Debussy on piano while sketching futuristic cityscapes on their tablet, weaving these influences into digital murals.",
+        "travel_persona": "Boland Hower, an adventurous twelve‑year-old, prefers weekend day trips to Hudson River parks for plein‑air sketching, has visited Washington, D.C.’s Smithsonian museums, and dreams of exploring Tokyo’s Akihabara for anime culture; they plan family trips that balance budget‑friendly road trips with occasional international school tours.",
+        "culinary_persona": "Boland Hower, a budding home‑chef, favors creating their own Margherita pizza with fresh basil from the community garden, enjoys DIY sushi rolls with avocado and cucumber, and experiments with tofu stir‑fry seasoned with ginger; they love snacking on crunchy kale chips while listening to lo‑fi beats.",
+        "persona": "Boland Hower blends a calm, curious mind with a love for street art, robotics, and piano, balancing disciplined savings and health routines while sprinkling their days with impulsive art‑supply splurges and occasional screen‑time procrastination; they remain resilient and cooperative in group projects yet assertive when defending their creative vision.",
+        "cultural_background": "Boland was raised in a white, middle‑class family in New York City. His family celebrates traditional American holidays such as Thanksgiving, Christmas, and Independence Day, and they value education, curiosity, and cultural exposure. Growing up in Manhattan’s diverse neighborhoods, he has been immersed in a multicultural environment, regularly attending city events, museum programs, and community festivals that showcase a wide range of cultural traditions. This urban upbringing has fostered an inclusive outlook, a deep appreciation for artistic expression across cultures, and a comfort navigating a richly varied social landscape.",
+        "skills_and_expertise": "Boland has a solid academic base in reading comprehension, creative writing, and basic mathematics. His curiosity about art drives strong sketching abilities and digital illustration skills using tablet apps such as Procreate. He has cultivated basic photography techniques and explores visual storytelling through comics and storyboards. In the realm of technology, he is proficient with block‑based programming in Scratch and enjoys building simple robots in his school’s robotics club. He plays piano at a beginner level and applies his balanced organization to manage school assignments, extracurricular projects, and personal creative endeavors. His collaborative experiences have sharpened team‑working, leadership, and problem‑solving skills.",
+        "skills_and_expertise_list": "['Reading comprehension', 'Creative writing', 'Basic mathematics', 'Sketching', 'Digital illustration (Procreate)', 'Photography basics', 'Scratch programming', 'Simple robotics', 'Beginner piano', 'Time management', 'Project planning', 'Team collaboration', 'Leadership in group projects']",
+        "hobbies_and_interests": "Boland spends his free time drawing street scenes, painting characters, and experimenting with digital art on his tablet. He regularly visits the Metropolitan Museum of Art and MoMA, where he studies contemporary works and participates in youth workshops. He reads science‑fiction and fantasy novels, plays piano, and enjoys building simple robots and coding games in Scratch. He explores neighborhood graffiti and street art, plays creative video games like Minecraft, and participates in his school’s after‑school art club and robotics club. On weekends, he volunteers at a community garden, learning about sustainable practices and urban ecology.",
+        "hobbies_and_interests_list": "['Sketching', 'Digital painting', 'Museum visits', 'Reading sci‑fi/fantasy novels', 'Playing piano', 'Robotics club', 'Scratch programming', 'Exploring street art', 'Minecraft', 'After‑school art club', 'Community garden volunteering']",
+        "career_goals_and_ambitions": "Boland aspires to attend a specialized arts high school in New York City, such as LaGuardia High School, to deepen his visual art and design talents. He envisions a future as a digital illustrator, graphic designer, or interactive media artist, potentially working in animation, video‑game development, or museum curation. His calm and resilient nature fuels long‑term planning: he aims to earn a BFA in Visual Arts, later pursue a master’s degree in Interactive Design, and create inclusive, culturally rich visual experiences that merge creativity with technology. He also keeps an open mind to unconventional career paths that blend art, science, and community engagement.",
+        "sex": "Male",
+        "age": 12,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "New York",
+        "state": "NY",
+        "zipcode": 10024,
+        "country": "USA"
+      },
+      "wave": 0,
+      "exposed_by_index": null,
+      "exposed_by_uuid": null,
+      "exposed_by_share_type": null,
+      "reaction_probs": {
+        "neutral": 0.012636521831154823,
+        "like": 0.8542734384536743,
+        "dislike": 0.0012832102365791798,
+        "like_share": 0.1317140758037567,
+        "dislike_share": 9.273721661884338e-05
+      },
+      "emotion_probs": {
+        "empathy": 0.7443749308586121,
+        "relation": 0.8051295876502991,
+        "inspiration": 0.5012791156768799,
+        "curiosity": 0.5143057107925415,
+        "joy": 0.8469060063362122
+      },
+      "segment_weights": [
+        0.1502884030342102,
+        0.7591426968574524,
+        0.0905689224600792
+      ],
+      "affinity": 0.6245430707931519,
+      "affinity_s": 1.8879963159561157,
+      "sampled_action": "like_share",
+      "shared_to_indices": [
+        6344,
+        8659,
+        1399
+      ],
+      "shared_to_uuids": [
+        "35e41d3ab40843319c7d2c1f8768d097",
+        "4dd9f910e74a47e99a085fcb2858f9c6",
+        "20b78a9065674f85b065cbb1c52d8403"
+      ]
+    },
+    {
+      "exposure_id": 3,
+      "persona_index": 6344,
+      "uuid": "35e41d3ab40843319c7d2c1f8768d097",
+      "archetype": "not in workforce, age 13, female",
+      "occupation": "not_in_workforce",
+      "persona": {
+        "uuid": "35e41d3ab40843319c7d2c1f8768d097",
+        "professional_persona": "Narja, a budding visual storyteller, merges watercolor sketches with digital illustration and Scratch programming to prototype interactive comic panels for school projects, channeling their curiosity and cooperative nature into collaborative art clubs while sometimes over‑thinking deadlines.",
+        "sports_persona": "Narja, an energetic pick‑up basketball enthusiast, joins the community center’s after‑school hoop sessions, follows the NBA’s Los Angeles Lakers, and balances weekend games with occasional jogs while listening to R&B playlists.",
+        "arts_persona": "Narja, a fervent fan of graphic novels, draws inspiration from manga creator Eiichiro Oda, the sketchy style of Katsuhiro Otomo, and the vibrant street art of Banksy, while curating weekly playlists of Afrobeat stars like Burna Boy and hip‑hop icons such as Kendrick Lamar to fuel their creative flow.",
+        "travel_persona": "Narja, a curious explorer, prefers short family trips that blend cultural immersion with artistic inspiration, dreaming of wandering the Louvre’s exhibition halls in Paris, strolling the colorful souks of Marrakech, and visiting the Smithsonian’s National Portrait Gallery on future school breaks.",
+        "culinary_persona": "Narja, an enthusiastic home‑chef, delights in helping to prepare a fragrant fish‑and‑rice stew with tomato and vegetables (thieboudienne), experiments with fresh mango salsa, and often pairs their creations with homemade ginger‑spiced tea while occasionally indulging in cheesy pizza slices on lazy weekends.",
+        "persona": "Narja, a creatively restless teen, channels curiosity into art, coding, and dance, constantly juggles meticulous planning with bouts of worry that sometimes delay their projects.",
+        "cultural_background": "Narja is a first‑generation American of Senegalese descent; her family maintains cultural traditions such as speaking Wolof and French at home, celebrating Tabaski and Eid, and preparing dishes like thieboudienne. Growing up in Springfield Gardens, Queens, she experiences a vibrant multicultural environment that includes a large African diaspora, Caribbean communities, and diverse immigrant neighborhoods. These cultural roots nurture her love for rhythm, storytelling, and visual expression, while the city’s artistic scene fuels her curiosity and openness to new ideas.",
+        "skills_and_expertise": "Narja has built a solid foundation in visual arts, especially drawing and digital illustration, and enjoys crafting stories through creative writing. She is comfortable using basic coding platforms like Scratch to create simple interactive projects. Her schoolwork shows strong organization and time‑management; she keeps meticulous notes, coordinates group assignments, and reliably meets deadlines. Narja’s empathy and communication abilities enable her to mediate peer conflicts and work cooperatively in team settings. She reads and writes fluently in English and speaks conversational Wolof at home, reflecting her Senegalese heritage, and she is developing confidence in public speaking and storytelling.",
+        "skills_and_expertise_list": "['drawing', 'digital illustration', 'creative writing', 'basic coding (Scratch)', 'storytelling', 'team collaboration', 'project organization', 'English literacy', 'basic Wolof', 'public speaking']",
+        "hobbies_and_interests": "In her free time, Narja loves sketching characters in her notebook, experimenting with watercolor and digital illustration tools, and immersing herself in graphic novels from diverse cultures. She listens to a mix of Afrobeat, hip‑hop, and R&B, and often practices dance moves with friends. Narja creates simple interactive stories using Scratch, writes short fiction for her personal blog, and volunteers at the community center, assisting younger children with arts‑craft activities. Weekends often find her exploring nearby museum exhibitions, playing pick‑up basketball, and helping her family prepare traditional Senegalese dishes like thieboudienne.",
+        "hobbies_and_interests_list": "['sketching', 'painting', 'reading graphic novels', 'listening to Afrobeat and hip‑hop', 'coding simple games in Scratch', 'writing short stories', 'jazz dancing', 'volunteering at community center', 'attending local museum exhibitions', 'playing basketball with friends']",
+        "career_goals_and_ambitions": "Narja dreams of turning her passion for art and storytelling into a career that helps others. She aims to enroll in a high‑school program with a strong visual‑arts track, later study graphic design or illustration at university, and eventually work as an illustrator or art therapist. She is also drawn to community outreach, envisioning a role where she designs workshops that blend art, technology, and mental‑wellness for youth in her neighborhood. In the short term, she plans to expand her portfolio, win a school art competition, and secure a mentorship with a local artist.",
+        "sex": "Female",
+        "age": 13,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Springfield Gardens",
+        "state": "NY",
+        "zipcode": 11413,
+        "country": "USA"
+      },
+      "wave": 1,
+      "exposed_by_index": 6841,
+      "exposed_by_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "exposed_by_share_type": "like_share",
+      "reaction_probs": {
+        "neutral": 0.021698014810681343,
+        "like": 0.8506368398666382,
+        "dislike": 0.0029390142299234867,
+        "like_share": 0.12450677156448364,
+        "dislike_share": 0.00021936066332273185
+      },
+      "emotion_probs": {
+        "empathy": 0.70208740234375,
+        "relation": 0.7883924841880798,
+        "inspiration": 0.5225266814231873,
+        "curiosity": 0.5382032990455627,
+        "joy": 0.844336748123169
+      },
+      "segment_weights": [
+        0.15006983280181885,
+        0.7600966691970825,
+        0.08983342349529266
+      ],
+      "affinity": 0.6033977270126343,
+      "affinity_s": 1.344414234161377,
+      "sampled_action": "like",
+      "shared_to_indices": [],
+      "shared_to_uuids": []
+    },
+    {
+      "exposure_id": 4,
+      "persona_index": 8659,
+      "uuid": "4dd9f910e74a47e99a085fcb2858f9c6",
+      "archetype": "not in workforce, age 17, female",
+      "occupation": "not_in_workforce",
+      "persona": {
+        "uuid": "4dd9f910e74a47e99a085fcb2858f9c6",
+        "professional_persona": "Suzanne Schmidt is a budding graphic design enthusiast who leverages their strong public speaking and peer‑mediating skills to lead school art‑club meetings and run social‑media campaigns for local charity events, channeling their curiosity and love of community into organized yet adaptable project plans that often make them the lively focal point of any creative collaboration.",
+        "sports_persona": "Suzanne Schmidt enjoys low‑impact fitness through weekly yoga classes at the community center, follows the local minor‑league baseball team the River Rats and the city’s women’s soccer club for occasional weekend games, and occasionally participates in a high‑school intramural volleyball league to stay active and socialize, and they often cheer loudly with their teammates.",
+        "arts_persona": "Suzanne Schmidt spends free hours sketching plein‑air landscapes inspired by Monet and experimenting with digital illustrations reminiscent of contemporary artist LOISH, curates playlists featuring artists like Phoebe Bridgers and Bon Iver, and regularly attends productions by the town’s community theater, especially plays by Lin‑Manuel Miranda, which fuel their passion for storytelling through visual media, and they love the immersive experience.",
+        "travel_persona": "Suzanne Schmidt has taken a school art‑history field trip to Washington, D.C., visited the Grand Canyon on a summer family road‑trip, and dreams of backpacking through Florence and the Tuscan countryside to study Renaissance frescoes, preferring a mix of planned itineraries and spontaneous detours that allow them to capture photographs for their sketchbooks.",
+        "culinary_persona": "Suzanne Schmidt prefers quick yet wholesome meals like avocado toast with chili flakes, bowls of vegan buddha bowls topped with roasted chickpeas, and occasionally indulges in late‑night pizza slices while binge‑watching documentaries, but they struggle to resist the lure of sugary cereal at midnight and often forget to prep balanced lunches for school.",
+        "persona": "Suzanne Schmidt is a talkative, art‑obsessed teen who balances meticulous planning with spontaneous creativity, yet wrestles with anxiety‑driven worry and a habit of late‑night snack binges, making them both a vibrant community catalyst and a self‑critical perfectionist.",
+        "cultural_background": "Suzanne comes from a German‑American family that has lived in Ravenna, Ohio for generations. Raised in a close‑knit Midwestern town, she grew up attending a Protestant church and participating in community festivals that celebrate local folk traditions. The values of modesty, hard work, and neighborly support common in the region have shaped her cooperative nature, while her family's appreciation for handmade crafts and storytelling sparked her early interest in visual arts. Though rooted in these local customs, her curiosity drives her to explore broader cultural ideas through art, music, and digital media.",
+        "skills_and_expertise": "Suzanne boasts strong interpersonal communication and public speaking abilities, honed through school theater and community events. She is adept at organizing small gatherings, managing social media content for her friend group, and creating digital illustrations using basic graphic design tools. Her empathy and conflict‑resolution skills make her a natural peer mediator, and she demonstrates reliable time‑management and flexibility in balancing schoolwork, extracurricular projects, and volunteer commitments.",
+        "skills_and_expertise_list": "['Public speaking', 'Interpersonal communication', 'Event planning', 'Digital illustration', 'Social media content creation', 'Peer mediation', 'Creative writing', 'Basic graphic design', 'Time management', 'Adaptability']",
+        "hobbies_and_interests": "Her free time is filled with sketching landscapes, experimenting with digital art, and attending local theater productions. She enjoys curating playlists, exploring podcasts about psychology and art history, and volunteering at the town's community garden. To manage stress, Suzanne practices yoga, journaling, and occasionally writes poetry that reflects her inner worries and hopes.",
+        "hobbies_and_interests_list": "['Sketching', 'Digital art', 'Theater attendance', 'Curating music playlists', 'Listening to psychology and art podcasts', 'Volunteering at community garden', 'Yoga', 'Journaling', 'Poetry writing']",
+        "career_goals_and_ambitions": "Suzanne aspires to study graphic design and community outreach at a local college, aiming to combine her artistic talent with her love for helping others. She envisions a career as a communications coordinator for a nonprofit arts center, where she can develop programs that use visual arts to support mental‑health awareness among teens. In the long term, she hopes to lead workshops that empower young people to express themselves creatively while fostering a supportive community environment.",
+        "sex": "Female",
+        "age": 17,
+        "marital_status": "never_married",
+        "education_level": "less_than_9th",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Ravenna",
+        "state": "OH",
+        "zipcode": 44266,
+        "country": "USA"
+      },
+      "wave": 1,
+      "exposed_by_index": 6841,
+      "exposed_by_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "exposed_by_share_type": "like_share",
+      "reaction_probs": {
+        "neutral": 0.04119035229086876,
+        "like": 0.7852287292480469,
+        "dislike": 0.011057712137699127,
+        "like_share": 0.16139280796051025,
+        "dislike_share": 0.001130425138399005
+      },
+      "emotion_probs": {
+        "empathy": 0.612657368183136,
+        "relation": 0.7066662907600403,
+        "inspiration": 0.4654364585876465,
+        "curiosity": 0.5404393076896667,
+        "joy": 0.7653770446777344
+      },
+      "segment_weights": [
+        0.14964249730110168,
+        0.7607782483100891,
+        0.08957924693822861
+      ],
+      "affinity": 0.6159504055976868,
+      "affinity_s": 1.6671051979064941,
+      "sampled_action": "like",
+      "shared_to_indices": [],
+      "shared_to_uuids": []
+    },
+    {
+      "exposure_id": 5,
+      "persona_index": 1399,
+      "uuid": "20b78a9065674f85b065cbb1c52d8403",
+      "archetype": "not in workforce, age 19, female",
+      "occupation": "not_in_workforce",
+      "persona": {
+        "uuid": "20b78a9065674f85b065cbb1c52d8403",
+        "professional_persona": "Theresa Snyder, a 19‑year‑old aspiring digital‑media student, blends curiosity‑driven sketching with practical Canva and Photoshop expertise to produce instantly shareable Instagram graphics, while their competitive streak fuels a side hustle of freelance logo work that they manage with spontaneous, flexible deadlines.",
+        "sports_persona": "Theresa Snyder enjoys spontaneous jogs through the city’s Riverfront Park, occasional weekend ultimate frisbee matches with the local ‘Trailblazers’ club, and follows the Golden State Warriors and Seattle Storm on TV, preferring low‑key, flexible exercise over regimented gym routines.",
+        "arts_persona": "Theresa Snyder’s artistic identity fuses sketching of urban street art inspired by Banksy with a love for alternative music from Tame Impala and The Strokes, while they channel competitive problem‑solving into DIY resin crafts and edit short video loops set to Austin Wintory’s game soundtracks.",
+        "travel_persona": "Theresa Snyder’s travel style favors budget‑friendly, spur‑of‑the‑moment trips, having explored the graffiti‑laden neighborhoods of Berlin on a student exchange, trekked the Red River Gorge on a weekend hike, and aspiring to visit Kyoto’s cherry‑blossom festivals and Barcelona’s street‑art districts, all while balancing limited funds and family expectations.",
+        "culinary_persona": "Theresa Snyder enjoys crafting avocado toast topped with feta and chili flakes, whipping up quick shrimp tacos with fresh cilantro and lime, and experimenting with homemade ramen broth seasoned with miso and kombu, though their cooking skill remains at a confident home‑cook level, often relying on YouTube tutorials for new recipes.",
+        "persona": "Theresa Snyder is a curious yet laid‑back 19‑year‑old visual creator who balances spontaneous freelance design gigs with disciplined budgeting, occasional health neglect, and a love for indie games, street art, and low‑key adventures.",
+        "cultural_background": "Theresa was raised in a middle‑class white, suburban family in Baldwin Park, where she was exposed to a multicultural environment, especially the Hispanic community. Her family observes traditional American holidays such as Thanksgiving and Christmas, often incorporating local influences, including participation in community festivals featuring Latino cuisine and music. She attended a local public high school, learning basic Spanish and developing an appreciation for the cultural diversity surrounding her.",
+        "skills_and_expertise": "Theresa has practical proficiency in basic computer operations, social media content creation, and graphic design using Canva and Adobe Photoshop. She can manage personal finances and budgeting, demonstrating competency in spreadsheet software (Microsoft Excel, Google Sheets). She also possesses strong analytical skills through solving puzzles and playing strategy video games, and can repair simple electronic devices like smartphones. Additionally, she has conversational-level Spanish from community interactions and an eye for detail in editing short videos for personal use.",
+        "skills_and_expertise_list": "['Basic computer literacy', 'Social media content creation', 'Graphic design (Canva, Photoshop)', 'Personal finance management', 'Spreadsheet proficiency (Excel, Google Sheets)', 'Strategic video gaming', 'Simple electronics repair', 'Conversational Spanish']",
+        "hobbies_and_interests": "Theresa enjoys solitary hobbies such as sketching, reading science‑fiction novels, and exploring indie video games that challenge her problem‑solving skills. She captures photos of local street art and goes on nature walks in nearby parks. Occasionally, she listens to alternative music and practices basic guitar chords. Her curiosity leads her to experiment with DIY crafts, while her preference for flexibility means she often engages in short, spontaneous creative sessions.",
+        "hobbies_and_interests_list": "['Sketching', 'Reading science fiction', 'Indie video gaming', 'Street art photography', 'Nature walks', 'Listening to alternative music', 'Playing guitar', 'DIY crafts']",
+        "career_goals_and_ambitions": "Theresa aspires to attend a community college to study digital media and graphic design, with a long‑term ambition to become a freelance visual designer or launch an e‑commerce boutique selling custom apparel. She seeks a flexible career that blends creative projects with practical income and hopes to build a personal brand on platforms like Instagram and TikTok.",
+        "sex": "Female",
+        "age": 19,
+        "marital_status": "never_married",
+        "education_level": "high_school",
+        "bachelors_field": null,
+        "occupation": "not_in_workforce",
+        "city": "Baldwin Park",
+        "state": "CA",
+        "zipcode": 91706,
+        "country": "USA"
+      },
+      "wave": 1,
+      "exposed_by_index": 6841,
+      "exposed_by_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "exposed_by_share_type": "like_share",
+      "reaction_probs": {
+        "neutral": 0.02076590433716774,
+        "like": 0.8524492383003235,
+        "dislike": 0.003213192569091916,
+        "like_share": 0.12338472157716751,
+        "dislike_share": 0.00018690629804041237
+      },
+      "emotion_probs": {
+        "empathy": 0.7130565643310547,
+        "relation": 0.7893642783164978,
+        "inspiration": 0.5048640370368958,
+        "curiosity": 0.5218416452407837,
+        "joy": 0.8162128329277039
+      },
+      "segment_weights": [
+        0.14908607304096222,
+        0.7616274952888489,
+        0.0892864316701889
+      ],
+      "affinity": 0.6406256556510925,
+      "affinity_s": 2.3014304637908936,
+      "sampled_action": "like",
+      "shared_to_indices": [],
+      "shared_to_uuids": []
+    }
+  ],
+  "share_edges": [
+    {
+      "from_exposure_id": 2,
+      "from_index": 6841,
+      "from_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "from_archetype": "not in workforce, age 12, male",
+      "from_occupation": "not_in_workforce",
+      "to_index": 6344,
+      "to_uuid": "35e41d3ab40843319c7d2c1f8768d097",
+      "to_archetype": "not in workforce, age 13, female",
+      "to_occupation": "not_in_workforce",
+      "share_type": "like_share",
+      "wave": 0
+    },
+    {
+      "from_exposure_id": 2,
+      "from_index": 6841,
+      "from_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "from_archetype": "not in workforce, age 12, male",
+      "from_occupation": "not_in_workforce",
+      "to_index": 8659,
+      "to_uuid": "4dd9f910e74a47e99a085fcb2858f9c6",
+      "to_archetype": "not in workforce, age 17, female",
+      "to_occupation": "not_in_workforce",
+      "share_type": "like_share",
+      "wave": 0
+    },
+    {
+      "from_exposure_id": 2,
+      "from_index": 6841,
+      "from_uuid": "d2b98cff42c54592bf00b957d294ce01",
+      "from_archetype": "not in workforce, age 12, male",
+      "from_occupation": "not_in_workforce",
+      "to_index": 1399,
+      "to_uuid": "20b78a9065674f85b065cbb1c52d8403",
+      "to_archetype": "not in workforce, age 19, female",
+      "to_occupation": "not_in_workforce",
+      "share_type": "like_share",
+      "wave": 0
+    }
+  ],
+  "config": {
+    "n_seeds": 3,
+    "seed": 7,
+    "max_waves": 1,
+    "batch_size": 128,
+    "sharpness": 2.5,
+    "embed_model_name": "BAAI/bge-small-en-v1.5",
+    "weights_path": "/Users/avneh/Code/milphacks/models/persona_pathpool.pt",
+    "persona_csv": "/Users/avneh/Code/milphacks/data/personas/nemotron_sample_10k.csv",
+    "embedding_csv": "/Users/avneh/Code/milphacks/data/personas/nemotron_sample_10k_embeddings_noname.csv",
+    "device": null
+  },
+  "advanced_analysis": {
+    "emotions": {
+      "mean_probs": {
+        "empathy": 0.6982,
+        "relation": 0.7658,
+        "inspiration": 0.5131,
+        "curiosity": 0.5253,
+        "joy": 0.8104
+      },
+      "dominant_emotion": "joy",
+      "mean_probs_by_wave": {
+        "0": {
+          "empathy": 0.7205,
+          "relation": 0.7702,
+          "inspiration": 0.5286,
+          "curiosity": 0.5172,
+          "joy": 0.8122
+        },
+        "1": {
+          "empathy": 0.6759,
+          "relation": 0.7615,
+          "inspiration": 0.4976,
+          "curiosity": 0.5335,
+          "joy": 0.8086
+        }
+      },
+      "mean_probs_by_action": {
+        "like": {
+          "empathy": 0.689,
+          "relation": 0.758,
+          "inspiration": 0.5155,
+          "curiosity": 0.5276,
+          "joy": 0.8031
+        },
+        "like_share": {
+          "empathy": 0.7444,
+          "relation": 0.8051,
+          "inspiration": 0.5013,
+          "curiosity": 0.5143,
+          "joy": 0.8469
+        }
+      },
+      "mean_probs_sharers": {
+        "empathy": 0.7444,
+        "relation": 0.8051,
+        "inspiration": 0.5013,
+        "curiosity": 0.5143,
+        "joy": 0.8469
+      },
+      "mean_probs_non_sharers": {
+        "empathy": 0.689,
+        "relation": 0.758,
+        "inspiration": 0.5155,
+        "curiosity": 0.5276,
+        "joy": 0.8031
+      },
+      "mean_probs_seeds": {
+        "empathy": 0.7205,
+        "relation": 0.7702,
+        "inspiration": 0.5286,
+        "curiosity": 0.5172,
+        "joy": 0.8122
+      },
+      "mean_probs_viral": {
+        "empathy": 0.6759,
+        "relation": 0.7615,
+        "inspiration": 0.4976,
+        "curiosity": 0.5335,
+        "joy": 0.8086
+      },
+      "top_emotions_among_sharers": [
+        {
+          "emotion": "joy",
+          "count": 1
+        }
+      ]
+    },
+    "reactions": {
+      "mean_probs": {
+        "neutral": 0.0366,
+        "like": 0.8055,
+        "dislike": 0.0158,
+        "like_share": 0.1409,
+        "dislike_share": 0.0013
+      },
+      "dominant_reaction": "like",
+      "predicted_share_probability": 0.1421,
+      "observed_share_rate": 0.1667,
+      "share_rate_delta": 0.0246
+    },
+    "virality": {
+      "amplification_factor": 2.0,
+      "viral_reach_ratio": 0.5,
+      "share_conversion_rate": 0.1667,
+      "effective_branching_factor": 3.0,
+      "secondary_share_rate": 0.0,
+      "like_share_ratio": 1.0,
+      "max_share_wave": 0,
+      "max_exposure_wave": 1,
+      "cascade_depth": 1,
+      "share_recipients_per_seed": 1.0,
+      "simulated_recipients_per_seed": 1.0
+    },
+    "share_patterns": {
+      "share_type_counts": {
+        "like_share": 3
+      },
+      "shares_by_wave": {
+        "0": 3
+      },
+      "exposures_by_wave": {
+        "0": 3,
+        "1": 3
+      },
+      "recipients_per_share": {
+        "3": 1
+      },
+      "inbound_share_types": {
+        "like_share": 3
+      },
+      "top_sharing_archetypes": [],
+      "top_recipient_archetypes": [],
+      "top_occupation_flows": [
+        {
+          "from_occupation": "not_in_workforce",
+          "to_occupation": "not_in_workforce",
+          "count": 3
+        }
+      ],
+      "unique_sharers": 1,
+      "unique_recipients": 3,
+      "reshare_events": 0
+    },
+    "affinity": {
+      "mean_all": 0.6108,
+      "mean_sharers": 0.6245,
+      "mean_non_sharers": 0.6081,
+      "mean_viral": 0.62,
+      "mean_affinity_s_all": 1.536,
+      "mean_affinity_s_sharers": 1.888
+    },
+    "segment_attention": {
+      "segment_count": 3,
+      "mean_weights_all": [
+        0.1499,
+        0.7602,
+        0.09
+      ],
+      "mean_weights_sharers": [
+        0.1503,
+        0.7591,
+        0.0906
+      ]
+    }
+  }
+}

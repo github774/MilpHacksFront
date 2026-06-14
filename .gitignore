@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Model / runtime caches (re-download locally)
+hf_cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

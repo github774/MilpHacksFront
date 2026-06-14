@@ -1,0 +1,18 @@
+# Core ML / simulation
+numpy
+pandas
+torch
+sentence-transformers
+
+# Video transcription
+faster-whisper          # also requires ffmpeg on PATH
+
+# API server
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+
+# Persona chat is served by a local Ollama instance:
+#   ollama pull qwen2.5:0.5b
+#   ollama serve

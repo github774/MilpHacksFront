@@ -1,127 +1,175 @@
-import React, { useEffect, useRef, useState } from "react";
-import brainGlowImg from "../assets/realistic_brain_monochrome.png";
+import { useEffect, useRef, useState } from "react";
+import type { EmotionKey } from "../api";
+import brainImg from "../assets/realistic_brain_clean.png";
+import { cn } from "../lib/utils";
 
 interface BrainSimulationProps {
-  isActive: boolean;
-  selectedGroups: string[];
-  riskScore: number;
-  selectedNodeId?: number | null;
-  onSelectNode?: (node: BrainNode | null) => void;
-  agents?: any[];
-  shareEdges?: any[];
+  // The model's 5-emotion output (mean_probs), each in 0..1.
+  emotions: Partial<Record<EmotionKey, number>>;
+  dominantEmotion?: EmotionKey;
+  // Optional: show a scanning sweep while a run is in flight.
+  isActive?: boolean;
+  /** Sidebar mode — hides legend and reduces on-canvas labels. */
+  compact?: boolean;
+  /** Large centerpiece layout with emotion sidebar overlay. */
+  hero?: boolean;
+  className?: string;
 }
 
-
-interface BrainNode {
-  id: number;
-  x: number;
-  y: number;
+// Each model emotion maps to an anatomical region on the sagittal brain image
+// so the panel reads as a brain lighting up rather than an abstract graph.
+interface EmotionRegion {
+  key: EmotionKey;
   label: string;
+  /** Full anatomical name shown in lists and legend. */
   region: string;
-  isHub?: boolean;
-  group?: string;
-  pulsePhase?: number;
-  currentRadius?: number;
-}
-
-interface BrainEdge {
-  from: number;
-  to: number;
-}
-
-interface Particle {
+  /** Shorter label for on-brain pills. */
+  regionShort: string;
+  blurb: string;
   x: number;
   y: number;
-  fromNode: number;
-  toNode: number;
-  progress: number;
-  speed: number;
-  color: string;
-  size: number;
-  isSignal: boolean;
-  pulsePhase?: number;
+  rx: number;
+  ry: number;
+  angle?: number;
 }
 
-interface Ripple {
+const EMOTION_REGIONS: EmotionRegion[] = [
+  {
+    key: "inspiration",
+    label: "Inspiration",
+    region: "Frontal Cortex",
+    regionShort: "Frontal Cortex",
+    blurb: "Aspiration & meaning-making",
+    x: 0.225,
+    y: 0.249,
+    rx: 0.042,
+    ry: 0.032,
+    angle: -0.35,
+  },
+  {
+    key: "curiosity",
+    label: "Curiosity",
+    region: "Dorsolateral Prefrontal Cortex",
+    regionShort: "Dorsolateral PFC",
+    blurb: "Exploration & information-seeking",
+    x: 0.431,
+    y: 0.126,
+    rx: 0.038,
+    ry: 0.028,
+    angle: 0.25,
+  },
+  {
+    key: "empathy",
+    label: "Empathy",
+    region: "Temporoparietal Junction",
+    regionShort: "TP Junction",
+    blurb: "Perspective-taking & concern",
+    x: 0.683,
+    y: 0.236,
+    rx: 0.036,
+    ry: 0.030,
+    angle: 0.45,
+  },
+  {
+    key: "relation",
+    label: "Relation",
+    region: "Superior Temporal Gyrus",
+    regionShort: "Superior Temporal",
+    blurb: "Social bonding & relatability",
+    x: 0.546,
+    y: 0.519,
+    rx: 0.040,
+    ry: 0.032,
+    angle: -0.12,
+  },
+  {
+    key: "joy",
+    label: "Joy",
+    region: "Limbic Reward Circuit",
+    regionShort: "Limbic System",
+    blurb: "Pleasure & positive affect",
+    x: 0.385,
+    y: 0.445,
+    rx: 0.034,
+    ry: 0.028,
+    angle: 0.15,
+  },
+];
+
+export { EMOTION_REGIONS };
+export type { EmotionRegion };
+
+// Faint neural tracts connecting regions (kept organic + subtle so the scene
+// reads as cortical tissue, not a node diagram).
+const TRACTS: [number, number][] = [
+  [0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [1, 4], [0, 3],
+];
+
+interface Spark {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+}
+
+interface Ring {
   x: number;
   y: number;
   radius: number;
   maxRadius: number;
-  color: string;
   alpha: number;
 }
 
-interface FloatingText {
-  x: number;
-  y: number;
-  text: string;
-  color: string;
-  alpha: number;
-  speedY: number;
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+function imageSourceSize(source: CanvasImageSource): { w: number; h: number } {
+  if (source instanceof HTMLImageElement) {
+    return { w: source.naturalWidth, h: source.naturalHeight };
+  }
+  if (source instanceof HTMLCanvasElement || source instanceof HTMLVideoElement) {
+    return { w: source.width, h: source.height };
+  }
+  if (source instanceof ImageBitmap) {
+    return { w: source.width, h: source.height };
+  }
+  return { w: 0, h: 0 };
 }
-
-const brainNodes: BrainNode[] = [
-  // Input Node (Left edge, Frontal lobe input)
-  { id: 1, x: 0.18, y: 0.50, label: "Content Input Gate", region: "input" },
-  
-  // Frontal Lobe (Teens / Cognitive Processing)
-  { id: 2, x: 0.28, y: 0.38, label: "Prefrontal Intake", region: "frontal" },
-  { id: 3, x: 0.32, y: 0.25, label: "Attention Regulation", region: "frontal" },
-  { id: 4, x: 0.42, y: 0.22, label: "Teens Hub", region: "frontal", isHub: true, group: "teens" },
-  { id: 5, x: 0.35, y: 0.42, label: "Reward Estimation", region: "frontal" },
-  
-  // Temporal Lobe (Anxious Users / Emotional Amplification)
-  { id: 6, x: 0.44, y: 0.54, label: "Amygdala Reactivity", region: "temporal" },
-  { id: 7, x: 0.42, y: 0.68, label: "Anxious Users Hub", region: "temporal", isHub: true, group: "anxious" },
-  { id: 8, x: 0.50, y: 0.62, label: "Stress Integration", region: "temporal" },
-  { id: 9, x: 0.58, y: 0.68, label: "Vulnerability Filter", region: "temporal" },
-
-  // Parietal Lobe (Caregivers / Empathy / Sensory Integration)
-  { id: 10, x: 0.54, y: 0.30, label: "Sensory Hub", region: "parietal" },
-  { id: 11, x: 0.65, y: 0.24, label: "Caregivers Hub", region: "parietal", isHub: true, group: "caregivers" },
-  { id: 12, x: 0.70, y: 0.35, label: "Cognitive Empathy", region: "parietal" },
-  { id: 13, x: 0.62, y: 0.45, label: "Perspective Synthesis", region: "parietal" },
-
-  // Occipital Lobe (General Public / Spread Network)
-  { id: 14, x: 0.82, y: 0.42, label: "Transmission Node", region: "occipital" },
-  { id: 15, x: 0.85, y: 0.52, label: "General Public Hub", region: "occipital", isHub: true, group: "general" },
-  { id: 16, x: 0.75, y: 0.48, label: "Viral Amplification", region: "occipital" },
-  
-  // Cerebellum (Action / Sharing Output)
-  { id: 17, x: 0.78, y: 0.70, label: "Engagement Trigger", region: "cerebellum" },
-  { id: 18, x: 0.70, y: 0.78, label: "Behavioral Mimicry", region: "cerebellum" },
-  { id: 19, x: 0.62, y: 0.80, label: "Sentiment Echo", region: "cerebellum" }
-];
-
-const brainEdges: BrainEdge[] = [
-  { from: 1, to: 2 }, { from: 1, to: 5 }, { from: 2, to: 3 }, { from: 2, to: 5 },
-  { from: 3, to: 4 }, { from: 5, to: 4 }, { from: 5, to: 6 }, { from: 6, to: 7 },
-  { from: 6, to: 8 }, { from: 7, to: 8 }, { from: 7, to: 9 }, { from: 8, to: 9 },
-  { from: 4, to: 10 }, { from: 8, to: 10 }, { from: 10, to: 11 }, { from: 11, to: 12 },
-  { from: 10, to: 13 }, { from: 12, to: 13 }, { from: 12, to: 16 }, { from: 13, to: 16 },
-  { from: 16, to: 14 }, { from: 14, to: 15 }, { from: 16, to: 15 }, { from: 9, to: 19 },
-  { from: 19, to: 18 }, { from: 18, to: 17 }, { from: 15, to: 17 }, { from: 17, to: 18 },
-  { from: 8, to: 13 }, { from: 15, to: 16 }, { from: 6, to: 13 }
-];
 
 export function BrainSimulation({
-  isActive,
-  selectedGroups,
-  riskScore,
-  selectedNodeId,
-  onSelectNode,
-  agents,
-  shareEdges
+  emotions,
+  dominantEmotion,
+  isActive = false,
+  compact = false,
+  hero = false,
+  className,
 }: BrainSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<BrainNode | null>(null);
-  
-  // Load brain background image
+  /** Sizing container — hero mode attaches to the center column only, not the full grid. */
+  const brainAreaRef = useRef<HTMLDivElement>(null);
+  const [bgImage, setBgImage] = useState<CanvasImageSource | null>(null);
+  // Hover is tracked via a ref so the animation loop isn't torn down on every
+  // mouse move (which would reset the pulse phase). The canvas draws the tooltip.
+  const hoveredRef = useRef<number | null>(null);
+  const selectedRef = useRef<number | null>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  selectedRef.current = selectedIdx;
+  const displayRef = useRef<number[]>(EMOTION_REGIONS.map(() => 0));
+
+  const selectRegion = (idx: number) => {
+    setSelectedIdx((prev) => (prev === idx ? null : idx));
+  };
+
+  const regionFocus = selectedIdx ?? hoveredIdx;
+  const isRegionHighlighted = (idx: number, isDom: boolean) =>
+    regionFocus === idx || (regionFocus === null && isDom);
+
   useEffect(() => {
     const img = new Image();
-    img.src = brainGlowImg;
+    img.src = brainImg;
     img.onload = () => setBgImage(img);
   }, []);
 
@@ -131,702 +179,692 @@ export function BrainSimulation({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // ---- Resolve target intensities from the model's emotion output ----
+    const rawVals = EMOTION_REGIONS.map((r) => clamp01(emotions[r.key] ?? 0));
+    const maxV = Math.max(0.0001, ...rawVals);
+    const hasData = rawVals.some((v) => v > 0);
+    // Brightness emphasizes the strongest emotion while keeping the relative
+    // profile readable; labels still show each emotion's absolute percentage.
+    const targets = rawVals.map((v) => (hasData ? 0.06 + 0.94 * (v / maxV) : 0));
+    const pcts = rawVals.map((v) => Math.round(v * 100));
+
+    const computedDominant =
+      dominantEmotion ??
+      EMOTION_REGIONS[rawVals.indexOf(Math.max(...rawVals))]?.key;
+    const dominantIdx = EMOTION_REGIONS.findIndex((r) => r.key === computedDominant);
+
     let animationId: number;
-    let particles: Particle[] = [];
-    let ripples: Ripple[] = [];
-    let floatingTexts: FloatingText[] = [];
     let globalTime = 0;
+    let sparks: Spark[] = [];
+    let ambient: Spark[] = [];
+    let rings: Ring[] = [];
 
-    // Set canvas resolution
+    const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+
     const resizeCanvas = () => {
-      const container = containerRef.current;
-      if (!container) return;
-      canvas.width = container.clientWidth * window.devicePixelRatio;
-      canvas.height = container.clientHeight * window.devicePixelRatio;
-      canvas.style.width = `${container.clientWidth}px`;
-      canvas.style.height = `${container.clientHeight}px`;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      const area = brainAreaRef.current;
+      if (!area) return;
+      const ratio = dpr();
+      canvas.width = area.clientWidth * ratio;
+      canvas.height = area.clientHeight * ratio;
+      canvas.style.width = `${area.clientWidth}px`;
+      canvas.style.height = `${area.clientHeight}px`;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(ratio, ratio);
     };
-
     resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    const ro = new ResizeObserver(resizeCanvas);
+    if (brainAreaRef.current) ro.observe(brainAreaRef.current);
 
-    // Get color based on risk score
-    const getRiskColor = (alpha = 1) => {
-      if (riskScore >= 75) return `rgba(255, 255, 255, ${alpha})`; // Bright White
-      if (riskScore >= 45) return `rgba(180, 180, 180, ${alpha})`; // Light Silver
-      return `rgba(110, 110, 110, ${alpha})`; // Slate Grey
-    };
-
-    // Get color for specific group
-    const getGroupColor = (group: string, alpha = 1) => {
-      switch (group) {
-        case "teens": return `rgba(255, 255, 255, ${alpha})`; // White
-        case "anxious": return `rgba(210, 210, 210, ${alpha})`; // Light Grey
-        case "caregivers": return `rgba(150, 150, 150, ${alpha})`; // Mid Grey
-        case "general": return `rgba(100, 100, 100, ${alpha})`; // Dark Grey
-        default: return `rgba(255, 255, 255, ${alpha})`;
+    // The brain image is contain-fit + centered; regions are positioned
+    // relative to that rect so they always sit on the cortex.
+    const brainRect = (width: number, height: number) => {
+      if (!bgImage) {
+        return { x: width * 0.08, y: height * 0.06, w: width * 0.84, h: height * 0.88 };
       }
+      const scaleMul = hero ? 0.98 : compact ? 0.92 : 0.96;
+      const { w: imgW, h: imgH } = imageSourceSize(bgImage);
+      const scale = Math.min(width / imgW, height / imgH) * scaleMul;
+      const w = imgW * scale;
+      const h = imgH * scale;
+      return { x: (width - w) / 2, y: (height - h) / 2, w, h };
     };
 
-    // Persona emoji avatars
-    const getPersonaEmoji = (group: string): string => {
-      switch (group) {
-        case "teens": return "👦";
-        case "anxious": return "😰";
-        case "caregivers": return "🤲";
-        case "general": return "👥";
-        default: return "●";
-      }
+    const regionPoint = (i: number, width: number, height: number) => {
+      const r = EMOTION_REGIONS[i];
+      const rect = brainRect(width, height);
+      return { x: rect.x + r.x * rect.w, y: rect.y + r.y * rect.h };
     };
 
-    // Helper to translate brain relative coordinates to canvas space
-    const getNodeCoords = (node: BrainNode, width: number, height: number) => {
-      // Offset slightly to center the brain shape inside the viewport
-      const offsetX = 50;
-      const offsetY = 20;
-      const brainWidth = width - offsetX * 2;
-      const brainHeight = height - offsetY * 2;
+    const regionEllipse = (i: number, width: number, height: number, expand = 1) => {
+      const r = EMOTION_REGIONS[i];
+      const rect = brainRect(width, height);
+      const { x, y } = regionPoint(i, width, height);
       return {
-        x: offsetX + node.x * brainWidth,
-        y: offsetY + node.y * brainHeight
+        cx: x,
+        cy: y,
+        rx: r.rx * rect.w * expand,
+        ry: r.ry * rect.h * expand,
+        angle: r.angle ?? 0,
       };
     };
 
-    // Initialize ambient particles
-    const initAmbientParticles = () => {
-      particles = [];
-      // Spawn 15-20 subtle ambient particles traversing random edges
-      for (let i = 0; i < 20; i++) {
-        const edgeIndex = Math.floor(Math.random() * brainEdges.length);
-        const edge = brainEdges[edgeIndex];
-        const isForward = Math.random() > 0.5;
-        particles.push({
-          x: 0,
-          y: 0,
-          fromNode: isForward ? edge.from : edge.to,
-          toNode: isForward ? edge.to : edge.from,
-          progress: Math.random(),
-          speed: 0.001 + Math.random() * 0.002,
-          color: "rgba(200, 200, 200, 0.4)", // Translucent grey
-          size: 1.5 + Math.random() * 2,
-          isSignal: false
+    const strokeRegionEllipse = (
+      i: number,
+      width: number,
+      height: number,
+      expand = 1,
+      dash: number[] = []
+    ) => {
+      const { cx, cy, rx, ry, angle } = regionEllipse(i, width, height, expand);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      ctx.setLineDash(dash);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const fillRegionEllipse = (
+      i: number,
+      width: number,
+      height: number,
+      expand: number,
+      alpha: number
+    ) => {
+      const { cx, cy, rx, ry, angle } = regionEllipse(i, width, height, expand);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+      ctx.restore();
+    };
+
+    const hitRegion = (mx: number, my: number, i: number, width: number, height: number) => {
+      const { cx, cy, rx, ry, angle } = regionEllipse(i, width, height, 1.25);
+      const dx = mx - cx;
+      const dy = my - cy;
+      const cos = Math.cos(-angle);
+      const sin = Math.sin(-angle);
+      const lx = dx * cos - dy * sin;
+      const ly = dx * sin + dy * cos;
+      return (lx / rx) ** 2 + (ly / ry) ** 2 < 1;
+    };
+
+    // Live intensity used for drawing: eased value with a soft ambient floor
+    // so the brain always feels alive, brightest for the dominant emotion.
+    const vizIntensity = (i: number) => {
+      const eased = displayRef.current[i] ?? 0;
+      const breathe = 0.012 + 0.018 * Math.sin(globalTime * 1.3 + i * 1.7);
+      return Math.min(1, eased + breathe * (eased > 0.05 ? 1 : 0.35));
+    };
+
+    const spawnAmbient = (width: number, height: number) => {
+      ambient = [];
+      const rect = brainRect(width, height);
+      for (let i = 0; i < 18; i++) {
+        ambient.push({
+          x: rect.x + Math.random() * rect.w,
+          y: rect.y + rect.h * (0.12 + Math.random() * 0.66),
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          life: Math.random(),
+          maxLife: 1,
+          size: 0.6 + Math.random() * 1.4,
         });
       }
     };
 
-    initAmbientParticles();
-
-    const getMappedNodeId = (index: number): number => {
-      return (index % 18) + 2;
-    };
-
-    const getNodeGroup = (nodeId: number): string => {
-      if (nodeId >= 2 && nodeId <= 5) return "teens";
-      if (nodeId >= 6 && nodeId <= 9) return "anxious";
-      if (nodeId >= 10 && nodeId <= 13) return "caregivers";
-      return "general";
-    };
-
-    // Trigger simulation signal blast
-    const triggerSimulationBlast = () => {
-      // Clear ambient particles to focus on the content flow
-      particles = [];
-      ripples = [];
-      floatingTexts = [];
-
-      if (agents && agents.length > 0 && shareEdges) {
-        // --- REAL BACKEND SIMULATION ANIMATION ---
-        
-        // 1. Wave 0: Seeds (triggered immediately)
-        const seeds = agents.filter(a => a.wave === 0);
-        seeds.forEach((seed, idx) => {
-          const toNode = getMappedNodeId(seed.persona_index);
-          const path = findPath(1, toNode);
-          if (path.length > 1) {
-            setTimeout(() => {
-              spawnPathParticle(path, getNodeGroup(toNode), 0);
-            }, idx * 30); // slightly staggered
-          }
-        });
-
-        // 2. Waves 1-4: Shares (staggered by wave index)
-        const maxWaveNum = Math.max(...shareEdges.map(e => e.wave), 0);
-        for (let waveNum = 0; waveNum <= maxWaveNum; waveNum++) {
-          const waveEdges = shareEdges.filter(e => e.wave === waveNum);
-          waveEdges.forEach((edge, idx) => {
-            const fromNode = getMappedNodeId(edge.from_index);
-            const toNode = getMappedNodeId(edge.to_index);
-            const path = findPath(fromNode, toNode);
-            if (path.length > 1) {
-              setTimeout(() => {
-                spawnPathParticle(path, getNodeGroup(toNode), 0);
-              }, (waveNum + 1) * 700 + idx * 30); // 700ms stagger per wave
-            }
-          });
-        }
-      } else {
-        // --- MOCK FRONTEND HEURISTIC BLAST ---
-        // Determine active hubs based on selected groups
-        const activeHubs = brainNodes.filter(n => n.isHub && n.group && selectedGroups.includes(n.group));
-        
-        // If no groups are selected, route to general public
-        const destinations = activeHubs.length > 0 
-          ? activeHubs 
-          : [brainNodes.find(n => n.group === "general")!];
-
-        // Spawn signal particles from Node 1 (Input Gate)
-        destinations.forEach(hub => {
-          // Find a path of edges from Node 1 to the Hub
-          for (let burst = 0; burst < 12; burst++) {
-            setTimeout(() => {
-              const path = findPath(1, hub.id);
-              if (path.length > 1) {
-                spawnPathParticle(path, hub.group || "general", burst * 0.1);
-              }
-            }, burst * 150); // Staggered stream
-          }
-        });
-      }
-    };
-
-    // A simple DFS/BFS to find visual routing path
-    const findPath = (startId: number, endId: number): number[] => {
-      const queue: number[][] = [[startId]];
-      const visited = new Set<number>();
-
-      while (queue.length > 0) {
-        const path = queue.shift()!;
-        const node = path[path.length - 1];
-
-        if (node === endId) return path;
-
-        if (!visited.has(node)) {
-          visited.add(node);
-          // Get neighbors
-          const neighbors = brainEdges
-            .filter(e => e.from === node || e.to === node)
-            .map(e => e.from === node ? e.to : e.from);
-
-          for (const neighbor of neighbors) {
-            queue.push([...path, neighbor]);
-          }
-        }
-      }
-      return [];
-    };
-
-    // Spawn a particle that follows a list of nodes
-    const spawnPathParticle = (nodePath: number[], group: string, delayOffset: number) => {
-      let currentSegment = 0;
-      const spawnNextSegment = () => {
-        if (currentSegment >= nodePath.length - 1) {
-          // Arrived at target hub! Create a ripple and float text
-          const targetNode = brainNodes.find(n => n.id === nodePath[nodePath.length - 1]);
-          if (targetNode) {
-            const coords = getNodeCoords(targetNode, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
-            const groupColor = getGroupColor(group);
-            
-            // Add a ripple
-            ripples.push({
-              x: coords.x,
-              y: coords.y,
-              radius: 5,
-              maxRadius: 40 + Math.random() * 30,
-              color: groupColor,
-              alpha: 1
-            });
-
-            // Add emotional text floating up
-            const emotionalKeywords: Record<string, string[]> = {
-              teens: ["Impulsive Sharing", "Peer Influence", "Dopamine Response", "Identity Shift"],
-              anxious: ["Panic Trigger", "Stress Spike", "Rumination Loop", "Hypervigilance"],
-              caregivers: ["Hyper-Vigilance", "Protective Instinct", "Burnout Risk", "Empathy Fatigue"],
-              general: ["Passive Spread", "Liking Behavior", "Muted Concern", "Echo Chamber"]
-            };
-
-            const keywords = emotionalKeywords[group] || ["Reaction Triggered"];
-            const text = keywords[Math.floor(Math.random() * keywords.length)];
-            
-            floatingTexts.push({
-              x: coords.x + (Math.random() * 30 - 15),
-              y: coords.y - 10,
-              text,
-              color: groupColor,
-              alpha: 1,
-              speedY: -0.5 - Math.random() * 0.8
-            });
-          }
-          return;
-        }
-
-        const fromId = nodePath[currentSegment];
-        const toId = nodePath[currentSegment + 1];
-        
-        const speed = 0.03 + Math.random() * 0.02; // Speed of traversal
-        const color = getGroupColor(group);
-
-        const p: Particle = {
-          x: 0,
-          y: 0,
-          fromNode: fromId,
-          toNode: toId,
-          progress: 0,
-          speed,
-          color,
-          size: 3 + Math.random() * 3,
-          isSignal: true
-        };
-
-        particles.push(p);
-
-        // Track when this segment finishes
-        const checkProgress = () => {
-          if (p.progress >= 1) {
-            // Remove particle
-            particles = particles.filter(pt => pt !== p);
-            currentSegment++;
-            spawnNextSegment();
-          } else {
-            requestAnimationFrame(checkProgress);
-          }
-        };
-        checkProgress();
-      };
-
-      spawnNextSegment();
-    };
-
-    if (isActive) {
-      triggerSimulationBlast();
-    }
-
-    // Canvas drawing loop
     const draw = () => {
-      const width = canvas.width / window.devicePixelRatio;
-      const height = canvas.height / window.devicePixelRatio;
+      const width = canvas.width / dpr();
+      const height = canvas.height / dpr();
       globalTime += 0.02;
+
+      if (ambient.length === 0) spawnAmbient(width, height);
 
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Draw glowing background brain image
+      const focus = hoveredRef.current ?? selectedRef.current;
+
+      // Ease displayed intensities toward target each frame.
+      for (let i = 0; i < EMOTION_REGIONS.length; i++) {
+        const cur = displayRef.current[i] ?? 0;
+        displayRef.current[i] = cur + (targets[i] - cur) * 0.06;
+      }
+
+      // 1. Brain anatomy backdrop (transparent PNG — no dark frame)
       if (bgImage) {
+        const rect = brainRect(width, height);
         ctx.save();
-        ctx.globalAlpha = 0.28; // Increased slightly for ultra-realistic detail visibility
-        ctx.globalCompositeOperation = "screen";
-        
-        // Center-fit the image
-        const imgWidth = bgImage.width;
-        const imgHeight = bgImage.height;
-        const scale = Math.min(width / imgWidth, height / imgHeight) * 0.95;
-        const w = imgWidth * scale;
-        const h = imgHeight * scale;
-        const x = (width - w) / 2;
-        const y = (height - h) / 2;
-        
-        ctx.drawImage(bgImage, x, y, w, h);
+        ctx.globalAlpha = hero ? 0.55 : compact ? 0.32 : 0.38;
+        ctx.drawImage(bgImage, rect.x, rect.y, rect.w, rect.h);
         ctx.restore();
       }
 
-      // 2. Draw Edges
-      ctx.lineWidth = 1;
-      brainEdges.forEach(edge => {
-        const fromNode = brainNodes.find(n => n.id === edge.from)!;
-        const toNode = brainNodes.find(n => n.id === edge.to)!;
-        const from = getNodeCoords(fromNode, width, height);
-        const to = getNodeCoords(toNode, width, height);
+      // 2. Neural tracts between regions (subtle, brighten with activity)
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      TRACTS.forEach(([a, b], i) => {
+        const pa = regionPoint(a, width, height);
+        const pb = regionPoint(b, width, height);
+        const act = (vizIntensity(a) + vizIntensity(b)) / 2;
 
-        // Highlight/Dim based on selection
-        const hasSelection = selectedNodeId !== undefined && selectedNodeId !== null;
-        const isConnectedToSelected = hasSelection && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-
-        // Check if this connection belongs to an active path
-        const isActiveEdge = isActive && (
-          selectedGroups.some(group => {
-            const isFromActiveHub = fromNode.isHub && fromNode.group === group;
-            const isToActiveHub = toNode.isHub && toNode.group === group;
-            return isFromActiveHub || isToActiveHub;
-          }) || 
-          (fromNode.region === "input" || toNode.region === "input")
-        );
+        const mx = (pa.x + pb.x) / 2;
+        const my = (pa.y + pb.y) / 2;
+        const nx = -(pb.y - pa.y);
+        const ny = pb.x - pa.x;
+        const norm = Math.hypot(nx, ny) || 1;
+        const bow = 16 + i * 2;
+        const cx = mx + (nx / norm) * bow;
+        const cy = my + (ny / norm) * bow;
 
         ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
-
-        if (hasSelection) {
-          if (isConnectedToSelected) {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-            ctx.lineWidth = 1.8;
-          } else {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.01)";
-            ctx.lineWidth = 0.5;
-          }
-        } else if (isActiveEdge) {
-          // Glow active pathways
-          ctx.strokeStyle = getRiskColor(0.35 + Math.sin(globalTime * 3) * 0.1);
-          ctx.lineWidth = 1.5;
-        } else {
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-          ctx.lineWidth = 1;
-        }
+        ctx.moveTo(pa.x, pa.y);
+        ctx.quadraticCurveTo(cx, cy, pb.x, pb.y);
+        ctx.strokeStyle = `rgba(255,255,255,${0.03 + act * 0.16})`;
+        ctx.lineWidth = 0.8 + act * 1.2;
         ctx.stroke();
+
+        // Traveling signal pulse along the tract
+        const t = (globalTime * 0.25 + i * 0.37) % 1;
+        const it = 1 - t;
+        const px = it * it * pa.x + 2 * it * t * cx + t * t * pb.x;
+        const py = it * it * pa.y + 2 * it * t * cy + t * t * pb.y;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.6 + act * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.18 + act * 0.5})`;
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // 3. Ambient cortical firing (drifting micro-sparks)
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ambient.forEach((s) => {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life += 0.01;
+        const tw = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(s.life * 6.28 + s.x));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${tw * 0.32})`;
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // 4. Activation rings (spawned by strongly active regions)
+      rings = rings.filter((ring) => ring.alpha > 0.01);
+      rings.forEach((ring) => {
+        ring.radius += 1.3;
+        ring.alpha = Math.max(0, 1 - ring.radius / ring.maxRadius);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,255,255,${ring.alpha * 0.45})`;
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+        ctx.restore();
       });
 
-      // 3. Draw Ripples
-      ripples.forEach((ripple, idx) => {
-        ripple.radius += 1.2;
-        ripple.alpha = 1 - (ripple.radius / ripple.maxRadius);
-        if (ripple.alpha <= 0) {
-          ripples.splice(idx, 1);
+      // 5. Focused sparks near active regions
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      sparks = sparks.filter((s) => s.life < s.maxLife);
+      sparks.forEach((s) => {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life += 0.02;
+        const a = (1 - s.life / s.maxLife) * 0.9;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // 5b. Static anatomical region outlines (always visible)
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      EMOTION_REGIONS.forEach((_, i) => {
+        const inten = vizIntensity(i);
+        const isFocused = focus === i;
+        const isDominant = hasData && i === dominantIdx;
+        const isHighlighted = isFocused || (focus === null && isDominant);
+        ctx.lineWidth = isHighlighted ? 1.1 : 0.7;
+        ctx.strokeStyle = `rgba(255,255,255,${0.1 + inten * 0.35 + (isFocused ? 0.25 : 0)})`;
+        strokeRegionEllipse(i, width, height, 1, isHighlighted ? [] : [3, 4]);
+      });
+      ctx.restore();
+
+      // 6. Emotion region glows + cores + labels
+      EMOTION_REGIONS.forEach((r, i) => {
+        const { x, y } = regionPoint(i, width, height);
+        const inten = vizIntensity(i);
+        const isFocused = focus === i;
+        const isDominant = hasData && i === dominantIdx;
+        const isHighlighted = isFocused || (focus === null && isDominant);
+        const peak = Math.min(0.92, 0.08 + inten * 0.84);
+        const pulse = Math.sin(globalTime * (1.6 + inten * 2) + i) * 0.015;
+
+        // Spawn firing sparks proportional to intensity (tight to patch)
+        if (Math.random() < inten * 0.22) {
+          const { rx, ry, angle } = regionEllipse(i, width, height, 0.85);
+          const ang = Math.random() * Math.PI * 2;
+          const dist = Math.random() * 0.65;
+          sparks.push({
+            x: x + Math.cos(ang) * rx * dist,
+            y: y + Math.sin(ang) * ry * dist,
+            vx: Math.cos(ang + angle) * 0.2,
+            vy: Math.sin(ang + angle) * 0.2 - 0.12,
+            life: 0,
+            maxLife: 0.45 + Math.random() * 0.35,
+            size: 0.6 + Math.random() * 1.1,
+          });
+        }
+        if (displayRef.current[i] > 0.45 && Math.random() < displayRef.current[i] * 0.025) {
+          const { rx, ry } = regionEllipse(i, width, height, 1);
+          rings.push({
+            x,
+            y,
+            radius: Math.max(rx, ry) * 0.5,
+            maxRadius: Math.max(rx, ry) * 1.8,
+            alpha: 1,
+          });
+        }
+
+        // Tight layered elliptical highlight (small anatomical patch)
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        fillRegionEllipse(i, width, height, 0.28 + pulse + inten * 0.08, peak * 0.95);
+        fillRegionEllipse(i, width, height, 0.52 + pulse + inten * 0.12, peak * 0.42);
+        fillRegionEllipse(i, width, height, 0.78 + pulse + inten * 0.1, peak * 0.14);
+        ctx.restore();
+
+        // Active region border
+        ctx.save();
+        ctx.lineWidth = isDominant ? 1.3 : isFocused ? 1.15 : 0.85;
+        ctx.strokeStyle = `rgba(255,255,255,${0.18 + inten * 0.55 + (isFocused ? 0.2 : 0)})`;
+        strokeRegionEllipse(i, width, height, 0.92 + inten * 0.08);
+        ctx.restore();
+
+        // Dominant emotion: tight accent arc on patch edge
+        if (isDominant) {
+          const { cx, cy, rx, ry, angle } = regionEllipse(i, width, height, 1.05);
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(angle);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, rx, ry, 0, globalTime * 1.4, globalTime * 1.4 + Math.PI * 1.1);
+          ctx.strokeStyle = "rgba(255,255,255,0.65)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Bright core — pin-point at region center
+        const coreR = 1.8 + inten * 2.2 + (isFocused ? 0.8 : 0);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, coreR, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowBlur = 6 + inten * 10;
+        ctx.shadowColor = "rgba(255,255,255,0.9)";
+        ctx.fill();
+        ctx.restore();
+
+        // Hero: numbered patch markers only (lists live in sidebars — no text pills)
+        if (hero) {
+          const showNum = isHighlighted || inten > 0.2;
+          if (showNum) {
+            ctx.save();
+            ctx.font = "bold 9px 'IBM Plex Mono', monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = `rgba(255,255,255,${0.35 + inten * 0.55 + (isFocused ? 0.2 : 0)})`;
+            ctx.fillText(String(i + 1), x, y);
+            ctx.restore();
+          }
           return;
         }
 
+        // Non-hero: compact on-brain label (hover / dominant only)
+        const showLabel =
+          !compact || isFocused || (hasData && i === dominantIdx) || inten > 0.55;
+        if (!showLabel) return;
+
+        const pctText = hasData ? `${pcts[i]}%` : "--";
+        const regionLine = r.regionShort;
+        ctx.font = "bold 9px 'IBM Plex Sans', sans-serif";
+        const regionW = ctx.measureText(regionLine).width;
+        ctx.font = "bold 9px 'IBM Plex Mono', monospace";
+        const pctW = ctx.measureText(pctText).width;
+        const pillW = regionW + pctW + 20;
+        const pillH = 18;
+        const { ry } = regionEllipse(i, width, height, 1);
+        const nearTop = y - ry - (pillH + 8) < 6;
+        const pillX = Math.max(6, Math.min(width - pillW - 6, x - pillW / 2));
+        const pillY = nearTop ? y + ry + 8 : y - ry - (pillH + 6);
+
+        const labelAlpha = isFocused ? 1 : 0.5 + inten * 0.45;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = ripple.color.replace("1)", `${ripple.alpha})`);
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = ripple.color;
+        ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+        ctx.fillStyle = `rgba(8,12,18,${0.6 * labelAlpha + 0.25})`;
+        ctx.fill();
+        ctx.strokeStyle = isDominant
+          ? `rgba(255,255,255,${0.45 + inten * 0.4})`
+          : `rgba(255,255,255,${0.12 + inten * 0.3})`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
+
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+        ctx.font = "bold 9px 'IBM Plex Sans', sans-serif";
+        ctx.fillStyle = `rgba(255,255,255,${labelAlpha})`;
+        ctx.fillText(regionLine, pillX + 8, pillY + pillH / 2 + 0.5);
+        ctx.textAlign = "right";
+        ctx.font = "bold 9px 'IBM Plex Mono', monospace";
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(1, labelAlpha + 0.1)})`;
+        ctx.fillText(pctText, pillX + pillW - 8, pillY + pillH / 2 + 0.5);
         ctx.restore();
       });
 
-      // 4. Update and Draw Particles
-      particles.forEach((p, idx) => {
-        p.progress += p.speed;
-
-        const fromNode = brainNodes.find(n => n.id === p.fromNode)!;
-        const toNode = brainNodes.find(n => n.id === p.toNode)!;
-        const from = getNodeCoords(fromNode, width, height);
-        const to = getNodeCoords(toNode, width, height);
-
-        // Linear interpolation
-        p.x = from.x + (to.x - from.x) * p.progress;
-        p.y = from.y + (to.y - from.y) * p.progress;
-
-        // Draw particle
+      // 7. Hover tooltip (non-hero — hero uses sidebars for region copy)
+      const hi = hoveredRef.current;
+      if (hi !== null && !hero) {
+        const r = EMOTION_REGIONS[hi];
+        const { x, y } = regionPoint(hi, width, height);
+        const lines = [r.region, `${r.label} · ${r.blurb}`];
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = p.isSignal ? 10 : 0;
-        ctx.shadowColor = p.color;
-        ctx.fill();
-        ctx.restore();
-
-        // Ambient loop recycling
-        if (!p.isSignal && p.progress >= 1) {
-          p.progress = 0;
-          const swap = p.fromNode;
-          p.fromNode = p.toNode;
-          p.toNode = swap;
-        }
-      });
-
-      // 4.5 Draw Region Glow Zones behind hub areas
-      const hubNodes = brainNodes.filter(n => n.isHub);
-      hubNodes.forEach(hub => {
-        const { x, y } = getNodeCoords(hub, width, height);
-        const isGroupActive = hub.group && selectedGroups.includes(hub.group);
-        const glowAlpha = isGroupActive ? 0.06 + Math.sin(globalTime * 2) * 0.02 : 0.02;
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 65);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${glowAlpha})`);
-        gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, 65, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        ctx.restore();
-      });
-
-      // 5. Draw Nodes
-      const hasSelection = selectedNodeId !== undefined && selectedNodeId !== null;
-
-      brainNodes.forEach(node => {
-        const { x, y } = getNodeCoords(node, width, height);
-        const isHovered = hoveredNode?.id === node.id;
-        const isSelected = selectedNodeId === node.id;
-
-        // Hub status
-        const isGroupActive = node.group && selectedGroups.includes(node.group);
-        const opacityMultiplier = hasSelection ? (isSelected ? 1.0 : 0.25) : 1.0;
-
-        ctx.save();
-
-        if (node.isHub) {
-          // --- ENHANCED HUB NODE ---
-          const baseRadius = 14;
-          const pulseSpeed = isGroupActive ? 4 : 1.5;
-          const pulseScale = isGroupActive ? 3 : 1.5;
-          const radius = baseRadius + Math.sin(globalTime * pulseSpeed) * pulseScale;
-          const groupColor = getGroupColor(node.group || "", 0.7 * opacityMultiplier);
-          const glowColor = getGroupColor(node.group || "", 0.9 * opacityMultiplier);
-
-          // Animated orbit ring for active hubs
-          if (isGroupActive) {
-            ctx.beginPath();
-            const orbitRadius = radius + 10;
-            const startAngle = globalTime * 2;
-            ctx.arc(x, y, orbitRadius, startAngle, startAngle + Math.PI * 1.2);
-            ctx.strokeStyle = getGroupColor(node.group || "", 0.4 * opacityMultiplier);
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Second orbit (counter-rotating)
-            ctx.beginPath();
-            ctx.arc(x, y, orbitRadius + 4, -startAngle * 0.7, -startAngle * 0.7 + Math.PI * 0.8);
-            ctx.strokeStyle = getGroupColor(node.group || "", 0.2 * opacityMultiplier);
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-
-          // Outer halo glow ring
-          ctx.beginPath();
-          ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
-          ctx.strokeStyle = getGroupColor(node.group || "", (isGroupActive ? 0.25 : 0.1) * opacityMultiplier);
-          ctx.lineWidth = 1;
-          ctx.stroke();
-
-          // Main filled circle
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = isHovered ? "#ffffff" : groupColor;
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = isHovered ? "#ffffff" : glowColor;
-          ctx.fill();
-
-          // Darker inner circle for emoji background
-          ctx.beginPath();
-          ctx.arc(x, y, radius - 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * opacityMultiplier})`;
-          ctx.shadowBlur = 0;
-          ctx.fill();
-
-          // Emoji avatar
-          ctx.font = `${Math.round(radius * 0.9)}px sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(getPersonaEmoji(node.group || ""), x, y + 1);
-
-          // Selected double-ring
-          if (isSelected) {
-            ctx.beginPath();
-            ctx.arc(x, y, radius + 12, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-
-          // --- PILL-SHAPED LABEL BADGE ---
-          const label = node.label;
-          ctx.font = "bold 10px 'Outfit', sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          const textWidth = ctx.measureText(label).width;
-          const pillW = textWidth + 14;
-          const pillH = 18;
-          const pillX = x - pillW / 2;
-          const pillY = y - radius - 20;
-
-          // Pill background
-          ctx.beginPath();
-          ctx.roundRect(pillX, pillY, pillW, pillH, 9);
-          ctx.fillStyle = isGroupActive
-            ? `rgba(255, 255, 255, ${0.12 * opacityMultiplier})`
-            : `rgba(255, 255, 255, ${0.04 * opacityMultiplier})`;
-          ctx.fill();
-          ctx.strokeStyle = isGroupActive
-            ? getGroupColor(node.group || "", 0.4 * opacityMultiplier)
-            : `rgba(255, 255, 255, ${0.08 * opacityMultiplier})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-
-          // Pill text
-          ctx.fillStyle = isGroupActive
-            ? `rgba(255, 255, 255, ${1.0 * opacityMultiplier})`
-            : `rgba(255, 255, 255, ${0.45 * opacityMultiplier})`;
-          ctx.fillText(label, x, pillY + pillH / 2);
-
-        } else {
-          // --- STANDARD NODE ---
-          let baseRadius = 4;
-          let radius = baseRadius;
-          let color = `rgba(255, 255, 255, ${0.2 * opacityMultiplier})`;
-          let glowColor = `rgba(255, 255, 255, 0)`;
-
-          if (node.region === "input") {
-            color = `rgba(255, 255, 255, ${0.7 * opacityMultiplier})`;
-            glowColor = `rgba(255, 255, 255, ${0.4 * opacityMultiplier})`;
-            radius = baseRadius + Math.sin(globalTime * 2.5) * 1.5;
-          }
-
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = isHovered ? "#ffffff" : color;
-          ctx.shadowBlur = isHovered ? 15 : 0;
-          ctx.shadowColor = isHovered ? "#ffffff" : glowColor;
-          ctx.fill();
-
-          // Selected rings for non-hub nodes
-          if (isSelected) {
-            ctx.beginPath();
-            ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-
-        ctx.restore();
-      });
-
-      // 6. Draw Hover details
-      if (hoveredNode) {
-        const { x, y } = getNodeCoords(hoveredNode, width, height);
-        ctx.save();
-        ctx.fillStyle = "rgba(10, 10, 11, 0.85)";
-        ctx.strokeStyle = hoveredNode.isHub ? getGroupColor(hoveredNode.group || "") : "rgba(255,255,255,0.15)";
+        const tipW = Math.min(220, Math.max(168, r.region.length * 6 + 40));
+        const tipX = Math.max(6, Math.min(width - tipW - 6, x - tipW / 2));
+        const tipY = Math.min(height - 48, y + 16);
+        ctx.fillStyle = "rgba(8,10,14,0.9)";
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(x - 70, y + 12, 140, 36, 6);
+        ctx.roundRect(tipX, tipY, tipW, 40, 6);
         ctx.fill();
         ctx.stroke();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 9px 'Outfit', sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(hoveredNode.label, x, y + 24);
-        
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.font = "8px 'Outfit', sans-serif";
-        ctx.fillText(hoveredNode.region.toUpperCase() + " REGION", x, y + 38);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 9px 'IBM Plex Sans', sans-serif";
+        ctx.fillText(lines[0], tipX + tipW / 2, tipY + 15);
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.font = "8px 'IBM Plex Sans', sans-serif";
+        ctx.fillText(lines[1], tipX + tipW / 2, tipY + 29);
         ctx.restore();
       }
 
-      // 7. Update and Draw Floating Texts
-      floatingTexts.forEach((ft, idx) => {
-        ft.y += ft.speedY;
-        ft.alpha -= 0.008; // Fade out slowly
-        if (ft.alpha <= 0) {
-          floatingTexts.splice(idx, 1);
-          return;
-        }
-
+      // 8. Scanning sweep while the model is running (pre-results)
+      if (isActive && !hasData) {
+        const rect = brainRect(width, height);
+        const sweepX = rect.x + ((globalTime * 90) % rect.w);
+        const sg = ctx.createLinearGradient(sweepX - 30, 0, sweepX + 30, 0);
+        sg.addColorStop(0, "rgba(255,255,255,0)");
+        sg.addColorStop(0.5, "rgba(255,255,255,0.16)");
+        sg.addColorStop(1, "rgba(255,255,255,0)");
         ctx.save();
-        ctx.fillStyle = ft.color.replace("1)", `${ft.alpha})`);
-        ctx.font = "bold 9px 'Outfit', sans-serif";
-        ctx.textAlign = "center";
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = ft.color;
-        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = sg;
+        ctx.fillRect(sweepX - 30, rect.y, 60, rect.h);
         ctx.restore();
-      });
+      }
 
       animationId = requestAnimationFrame(draw);
     };
 
-    // Hover mouse detection
-    const handleMouseMove = (e: MouseEvent) => {
+    const pickRegion = (e: MouseEvent): number | null => {
       const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const width = canvas.width / window.devicePixelRatio;
-      const height = canvas.height / window.devicePixelRatio;
-
-      let found: BrainNode | null = null;
-      for (const node of brainNodes) {
-        const { x, y } = getNodeCoords(node, width, height);
-        const dist = Math.hypot(mouseX - x, mouseY - y);
-        const hoverRadius = node.isHub ? 15 : 8;
-        if (dist < hoverRadius) {
-          found = node;
-          break;
-        }
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const width = canvas.width / dpr();
+      const height = canvas.height / dpr();
+      for (let i = 0; i < EMOTION_REGIONS.length; i++) {
+        if (hitRegion(mx, my, i, width, height)) return i;
       }
-      setHoveredNode(found);
+      return null;
     };
 
-    // Canvas click node detection
-    const handleCanvasClick = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const width = canvas.width / window.devicePixelRatio;
-      const height = canvas.height / window.devicePixelRatio;
-
-      let found: BrainNode | null = null;
-      for (const node of brainNodes) {
-        const { x, y } = getNodeCoords(node, width, height);
-        const dist = Math.hypot(mouseX - x, mouseY - y);
-        const clickRadius = node.isHub ? 18 : 10;
-        if (dist < clickRadius) {
-          found = node;
-          break;
-        }
-      }
-      onSelectNode?.(found);
+    const handleMouseMove = (e: MouseEvent) => {
+      const i = pickRegion(e);
+      hoveredRef.current = i;
+      setHoveredIdx(i);
+      canvas.style.cursor = i !== null ? "pointer" : "default";
+    };
+    const handleMouseLeave = () => {
+      hoveredRef.current = null;
+      setHoveredIdx(null);
+    };
+    const handleClick = (e: MouseEvent) => {
+      const i = pickRegion(e);
+      if (i !== null) setSelectedIdx((prev) => (prev === i ? null : i));
     };
 
     canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("click", handleCanvasClick);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+    canvas.addEventListener("click", handleClick);
     draw();
 
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
+      ro.disconnect();
       canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("click", handleCanvasClick);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      canvas.removeEventListener("click", handleClick);
       cancelAnimationFrame(animationId);
     };
-  }, [isActive, selectedGroups, riskScore, bgImage, hoveredNode, agents, shareEdges]);
+  }, [bgImage, isActive, emotions, dominantEmotion, compact, hero]);
+
+  const emotionBars = EMOTION_REGIONS.map((r) => ({
+    ...r,
+    pct: Math.round(clamp01(emotions[r.key] ?? 0) * 100),
+  }));
+  const maxPct = Math.max(1, ...emotionBars.map((e) => e.pct));
 
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-black/40 rounded-2xl border border-white/[0.04]">
-      {/* Background radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-      
-      {/* Canvas for simulation */}
-      <canvas ref={canvasRef} className="block w-full h-full relative z-10" />
+    <div
+      ref={hero ? undefined : brainAreaRef}
+      className={`w-full h-full relative overflow-hidden ${
+        hero
+          ? "bg-transparent"
+          : compact
+            ? "bg-transparent"
+            : "rounded-xl ui-inset"
+      } ${className ?? ""}`}
+    >
+      {/* Background + canvas — hero uses 3-column grid; brain fills center column */}
+      {hero ? (
+        <div className="relative z-10 grid h-full w-full grid-cols-1 md:grid-cols-[minmax(0,200px)_1fr_minmax(0,192px)] gap-3 md:gap-5 px-2 md:px-4 py-2 items-center">
+          {/* Mobile region chips */}
+          <div className="order-2 md:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+            {EMOTION_REGIONS.map((r, idx) => {
+              const isDom = r.key === dominantEmotion;
+              const active = isRegionHighlighted(idx, isDom);
+              return (
+                <button
+                  key={r.key}
+                  type="button"
+                  onClick={() => selectRegion(idx)}
+                  className={cn(
+                    "shrink-0 rounded-full px-3 py-1.5 border text-[10px] transition-all",
+                    active
+                      ? "bg-white/10 border-white/25 text-white"
+                      : "ui-inset border-white/[0.08] text-white/70"
+                  )}
+                >
+                  {idx + 1}. {r.regionShort}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Floating UI Legend overlay */}
-      <div className="absolute bottom-4 left-4 z-20 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-2.5 space-y-1.5 text-xs text-white/60">
-        <div className="font-semibold text-white/90 border-b border-white/5 pb-1 mb-1.5">Simulation Legend</div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
-          <span>Teens Archetype Hub</span>
+          {/* Left — region buttons (desktop) */}
+          <div className="order-3 md:order-1 hidden md:block">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-white/35 font-mono-data mb-3">
+              Brain regions
+            </div>
+            <ol className="space-y-2 list-none">
+              {EMOTION_REGIONS.map((r, idx) => {
+                const isDom = r.key === dominantEmotion;
+                const active = isRegionHighlighted(idx, isDom);
+                return (
+                  <li key={r.key}>
+                    <button
+                      type="button"
+                      onClick={() => selectRegion(idx)}
+                      onMouseEnter={() => setHoveredIdx(idx)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                      className={cn(
+                        "w-full text-left rounded-lg px-2.5 py-2 border transition-all duration-200",
+                        "hover:bg-white/[0.07] hover:border-white/15 active:scale-[0.99]",
+                        "focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40",
+                        active
+                          ? "bg-white/[0.1] border-white/25 shadow-[0_0_16px_rgba(255,255,255,0.05)]"
+                          : "ui-inset"
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span
+                          className={cn(
+                            "text-[10px] font-mono-data tabular-nums w-4 shrink-0 pt-0.5",
+                            active ? "text-white/70" : "text-white/30"
+                          )}
+                        >
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <div
+                            className={cn(
+                              "text-[11px] font-semibold leading-snug",
+                              active ? "text-white" : "text-white/80"
+                            )}
+                          >
+                            {r.region}
+                          </div>
+                          <div className="text-[10px] text-white/40 capitalize mt-0.5">{r.label}</div>
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
+          {/* Center — brain canvas (sized to this column only so anatomy stays centered) */}
+          <div
+            ref={brainAreaRef}
+            className="order-1 md:order-2 relative min-h-[min(420px,55vh)] h-full w-full min-w-0"
+          >
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full cursor-pointer" />
+          </div>
+
+          {/* Right — activation buttons */}
+          <div className="order-3 hidden sm:block md:order-3">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-white/35 font-mono-data mb-3">
+              Activation
+            </div>
+            <div className="space-y-2">
+              {emotionBars.map((e, idx) => {
+                const isDom = e.key === dominantEmotion;
+                const active = isRegionHighlighted(idx, isDom);
+                const barW = Math.max(4, (e.pct / maxPct) * 100);
+                return (
+                  <button
+                    key={e.key}
+                    type="button"
+                    onClick={() => selectRegion(idx)}
+                    onMouseEnter={() => setHoveredIdx(idx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    className={cn(
+                      "w-full text-left rounded-lg px-2.5 py-2 border transition-all duration-200",
+                      "hover:bg-white/[0.07] hover:border-white/15 active:scale-[0.99]",
+                      "focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40",
+                      active
+                        ? "bg-white/10 border-white/25 shadow-[0_0_16px_rgba(255,255,255,0.05)]"
+                        : "ui-inset"
+                    )}
+                  >
+                    <div className="text-[10px] font-semibold text-white/85 leading-snug mb-0.5">
+                      {e.region}
+                    </div>
+                    <div className="flex justify-between items-baseline gap-2 mb-1.5">
+                      <span className={cn("text-[10px] capitalize", active ? "text-white/70" : "text-white/45")}>
+                        {e.label}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-[11px] font-mono-data tabular-nums",
+                          active ? "text-white" : "text-white/50"
+                        )}
+                      >
+                        {e.pct}%
+                      </span>
+                    </div>
+                    <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden pointer-events-none">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${barW}%`,
+                          background: active
+                            ? "linear-gradient(90deg, #ffffff, #a3a3a3)"
+                            : "rgba(255,255,255,0.25)",
+                          boxShadow: active ? "0 0 12px rgba(255,255,255,0.35)" : undefined,
+                        }}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#d2d2d2] shadow-[0_0_8px_#d2d2d2]" />
-          <span>Anxious Users Hub</span>
+      ) : (
+        <>
+          <div
+            className={`absolute inset-0 pointer-events-none ${
+              compact
+                ? "bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.04),transparent_62%)]"
+                : "bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.04),transparent_62%)]"
+            }`}
+          />
+          <canvas ref={canvasRef} className="block w-full h-full relative z-10" />
+        </>
+      )}
+
+      {/* Title overlay — full / hero layout */}
+      {!compact && !hero && (
+        <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 pointer-events-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)] animate-pulse" />
+          <span className="text-[10px] font-semibold text-white/80">Neural Emotional Response</span>
+          {dominantEmotion && (
+            <span className="text-[9px] text-white/45 px-1.5 py-0.5 rounded-full bg-white/[0.05] capitalize">
+              {dominantEmotion}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#969696] shadow-[0_0_8px_#969696]" />
-          <span>Caregivers Hub</span>
+      )}
+
+      {/* Legend — full layout only */}
+      {!compact && !hero && (
+        <div className="absolute bottom-3 left-3 z-20 ui-inset rounded-xl px-3 py-2.5 space-y-1.5 text-[10.5px] pointer-events-none max-w-[240px]">
+          <div className="font-semibold text-white/90 text-[11px] mb-1">Brain regions</div>
+          {EMOTION_REGIONS.map((r, idx) => (
+            <div key={r.key} className="flex items-start gap-2">
+              <span className="text-[9px] font-mono-data text-white/30 w-3 shrink-0">{idx + 1}</span>
+              <div>
+                <div className="font-medium text-white/85 leading-snug">{r.region}</div>
+                <div className="text-white/40 capitalize text-[10px]">{r.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#646464] shadow-[0_0_8px_#646464]" />
-          <span>General Public Hub</span>
-        </div>
-        <div className="pt-1 text-[9px] text-white/40 italic">
-          Hover over nodes to inspect neural region
-        </div>
-      </div>
+      )}
     </div>
   );
 }
