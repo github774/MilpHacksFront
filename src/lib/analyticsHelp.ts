@@ -16,7 +16,7 @@ export const KPI_HELP: Record<
   },
   reach: {
     title: "People reached",
-    body: "Every simulated viewing event, including people who saw the content because someone shared it emotionally.",
+    body: "Every simulated viewing event, including people who saw the content because someone shared it. Reach alone is not benefit — check affect alongside.",
   },
   share_rate: {
     title: "Share rate",
@@ -29,7 +29,7 @@ export const KPI_HELP: Record<
   },
   polarization: {
     title: "Polarization index",
-    body: "Whether reactions skew negative (+) or positive (−). Strong polarization can indicate divisive or triggering content.",
+    body: "Whether reactions skew negative (+) or positive (−). Strong polarization can mean fewer viewers experience the benefit you intended.",
   },
 };
 

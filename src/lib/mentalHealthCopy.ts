@@ -5,13 +5,32 @@ export const MH = {
   productName: "SHIELD",
   productTagline: "Content wellbeing lab",
   heroHeadline: "Stress-test how your message lands before it spreads.",
-  heroSubcopy: "",
-  composerLabel: "Content",
-  composerPlaceholder: "Paste a post, caption, or script…",
+  heroSubcopy:
+    "See who may benefit, who may struggle, and what could spread — before you publish.",
+  composerLabel: "Content to preview",
+  composerPlaceholder: "Paste a post, caption, or script you plan to share…",
+  composerHint: "We model mood, empathy, and harm — not engagement alone.",
+  examplesLabel: "Sample tones",
   videoLabel: "Video",
-  runButton: "Run wellbeing simulation",
-  runButtonLoading: "Mapping emotional response…",
-  seedLabel: "Diverse audience sample",
+  videoHint: "Transcribed locally · same wellbeing preview as text",
+  runButton: "Preview emotional impact",
+  runButtonLoading: "Mapping emotional responses…",
+  seedLabel: "Audience sample",
+  seedHint:
+    "Diverse synthetic viewers — estimate benefit and harm across backgrounds, not one average reaction.",
+  simLoadingBadge: "Simulation in progress",
+  simLoadingTitle: "Modeling emotional responses",
+  simLoadingSub:
+    "Predicting who benefits, who withdraws, and how affect may spread through shares.",
+  spreadSidebarTitle: "Explore emotional spread",
+  spreadSidebarBody:
+    "Select a viewer for their personal impact — or chat to hear how your words might help or hurt someone healing.",
+  spreadEmptyShares:
+    "No reshares this run — lower contagion can mean less unintended harm, even when the message still lands strongly.",
+  resultsImpactLabel: "Wellbeing impact",
+  tabSpreadDesc: "Who feels what · contagion map",
+  tabAnalysisDesc: "Benefit signals · harm risk · affect profile",
+  tabModelDesc: "How we model viewer wellbeing",
   footer:
     "Built for mental-health-aware publishing · Local Whisper · 10k-persona affect model · Empathy chat",
   disclaimer:
@@ -21,19 +40,19 @@ export const MH = {
 export const MH_PILLARS = [
   {
     title: "Emotional mapping",
-    body: "See which brain-linked affects dominate — empathy, connection, inspiration, curiosity, or joy — across your audience.",
+    body: "See which affects dominate — empathy, connection, inspiration, curiosity, or joy — and whether they align with the benefit you intended.",
   },
   {
     title: "Harm signal detection",
-    body: "Surface dislike-share patterns and polarization before outrage or toxic narratives amplify through the network.",
+    body: "Surface dislike-shares and polarization before triggering language amplifies — protect vulnerable viewers before publish.",
   },
   {
     title: "Empathy interviews",
-    body: "Chat with simulated viewers in first person. Hear how your words might land on someone struggling or healing.",
+    body: "Chat with simulated viewers in first person. Hear what would have helped — or what felt unsafe — in their own words.",
   },
   {
     title: "Contagion preview",
-    body: "Watch emotional spread wave-by-wave — the same dynamics that help supportive posts lift communities can also carry harm.",
+    body: "Watch emotional spread wave-by-wave. Supportive posts can lift communities; the same dynamics can carry harm if tone misfires.",
   },
 ] as const;
 
@@ -58,8 +77,8 @@ export const MH_EXAMPLES = [
 
 export const MH_WHY_IT_MATTERS = [
   "Social content shapes mood, self-worth, and help-seeking — especially for young audiences.",
-  "One viral post can normalize burnout, stigma, or hope depending on how it's framed.",
-  "Creators deserve a sandbox to preview emotional impact, not just click-through rates.",
+  "One post can normalize burnout, stigma, or hope; the benefit depends on framing, not reach alone.",
+  "Creators deserve a sandbox to preview emotional impact before vulnerable people see it in the wild.",
 ] as const;
 
 export function wellbeingVerdict(score: number): {
@@ -72,26 +91,26 @@ export function wellbeingVerdict(score: number): {
       label: "High contagion",
       tone: viralityTone(score),
       blurb:
-        "Strong emotional spread — message may reach far beyond your seed audience. Review tone for unintended harm or overwhelm.",
+        "Strong emotional spread — review tone for unintended harm or overwhelm before wider benefit can land safely.",
     };
   if (score >= 0.4)
     return {
       label: "Moderate spread",
       tone: viralityTone(score),
       blurb:
-        "Healthy organic reach with measurable share waves. Check whether dominant emotions align with your wellbeing intent.",
+        "Healthy organic reach with share waves. Check whether dominant emotions match the benefit you meant to offer.",
     };
   if (score >= 0.1)
     return {
       label: "Limited spread",
       tone: viralityTone(score),
       blurb:
-        "Mostly contained to initial viewers. Emotional signal is present but not propagating widely.",
+        "Mostly contained to initial viewers. Emotional signal is present but not propagating widely — lower risk of network harm.",
     };
   return {
     label: "Contained",
     tone: viralityTone(score),
-    blurb: "Stays within the seed audience — low risk of network-wide emotional contagion.",
+    blurb: "Stays within the seed audience — low contagion risk; good when protecting sensitive topics.",
   };
 }
 

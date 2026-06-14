@@ -254,7 +254,7 @@ export function PersonaChat({ agent, persona, content, ollamaUp, onClose }: Pers
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             disabled={!ollamaUp || streaming}
-            placeholder={ollamaUp ? `Message this ${occupation}…` : "Ollama offline"}
+            placeholder={ollamaUp ? "Ask how this landed — or what would have helped…" : "Ollama offline"}
             className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/30 outline-none disabled:opacity-50"
           />
           <button

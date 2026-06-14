@@ -46,7 +46,7 @@ export function AnalyticsDetailPanel({ selection, pinned = false, result, onClea
     if (!selection) {
       return {
         title: "Explore wellbeing signals",
-        body: "Hover or click any chart, KPI, or list item to see how it relates to emotional impact, harm risk, and audience mental-health framing.",
+        body: "Hover or click any chart to see benefit, harm risk, and emotional impact — how each metric relates to audience mental health.",
         stats: [] as { label: string; value: string }[],
       };
     }

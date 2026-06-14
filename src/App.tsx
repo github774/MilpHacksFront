@@ -59,7 +59,7 @@ const clampSeeds = (v: number) =>
   Number.isNaN(v) ? SEED_MIN : Math.max(SEED_MIN, Math.min(SEED_MAX, Math.floor(v)));
 
 function StatusDot({ up }: { up: boolean }) {
-  return (
+    return (
     <span
       className={cn("w-1.5 h-1.5 rounded-full", up ? "bg-white" : "bg-white/25")}
       style={up ? { boxShadow: "0 0 8px rgba(255,255,255,0.8)" } : undefined}
@@ -229,7 +229,7 @@ export default function App() {
           <button onClick={reset} className="flex items-center group" aria-label="Home">
             <div className="w-8 h-8 rounded-xl liquid-glass-nested grid place-items-center">
               <Shield className="w-4 h-4 text-white/90" strokeWidth={2} />
-            </div>
+      </div>
           </button>
 
           <div className="flex items-center gap-3">
@@ -243,14 +243,14 @@ export default function App() {
               </span>
             </div>
             {phase === "results" && (
-              <button
+          <button
                 onClick={reset}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/10 border border-white/[0.08] text-[12px] font-medium transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> New
-              </button>
+          </button>
             )}
-          </div>
+        </div>
         </div>
       </header>
 
@@ -268,7 +268,7 @@ export default function App() {
               <div className="text-center max-w-xl mx-auto mb-8 flex flex-col items-center hero-readable">
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
                   className="mb-5"
                 >
                   <TextScramble text="SHIELD" autoPlay />
@@ -281,6 +281,16 @@ export default function App() {
                 >
                   {MH.heroHeadline}
                 </motion.p>
+                {MH.heroSubcopy && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="text-white/40 text-[13px] leading-relaxed mt-2 max-w-md"
+                  >
+                    {MH.heroSubcopy}
+                  </motion.p>
+                )}
               </div>
 
               {/* Composer */}
@@ -309,7 +319,7 @@ export default function App() {
                       <m.icon className="w-4 h-4" /> {m.label}
                     </button>
                   ))}
-                </div>
+              </div>
 
                 <div className="px-1 pb-1">
                   {inputMode === "text" ? (
@@ -325,9 +335,9 @@ export default function App() {
                           rows={5}
                           className="w-full bg-transparent text-[15px] text-white placeholder:text-white/45 outline-none resize-none leading-relaxed min-h-[120px]"
                         />
-                      </div>
+                  </div>
                       <div className="flex flex-wrap gap-1.5 mt-3 px-1">
-                        <span className="text-[10px] text-white/40 w-full mb-0.5">Examples</span>
+                        <span className="text-[10px] text-white/40 w-full mb-0.5">{MH.examplesLabel}</span>
                         {EXAMPLES.map((ex) => (
                           <button
                             key={ex.label}
@@ -338,6 +348,7 @@ export default function App() {
                           </button>
                         ))}
                       </div>
+                      <p className="text-[10px] text-white/35 mt-2.5 px-1 leading-relaxed">{MH.composerHint}</p>
                     </>
                   ) : (
                     <div className="space-y-3">
@@ -385,7 +396,7 @@ export default function App() {
                                 Replace video
                               </button>
                             )}
-                          </div>
+                            </div>
                         </>
                       ) : transcribing ? (
                         <UploadAnimation fileName={videoName ?? "video"} />
@@ -399,7 +410,7 @@ export default function App() {
                             Click to upload a video
                           </span>
                           <span className="text-[11px] text-white/55">
-                            mp4, mov, webm — transcribed locally with Whisper
+                            mp4, mov, webm — {MH.videoHint}
                           </span>
                         </button>
                       )}
@@ -410,16 +421,16 @@ export default function App() {
                             <span>{transcribeInfo.duration.toFixed(1)}s clip</span>
                             <span>{transcribeInfo.segments.length} segments</span>
                             <span className="ml-auto text-white/60">transcribed ✓</span>
-                          </div>
+                  </div>
                           <p className="text-[13px] text-white/90 leading-relaxed line-clamp-4">
                             {transcribeInfo.text}
                           </p>
-                        </div>
+                </div>
                       )}
                     </div>
                   )}
-                </div>
-
+                  </div>
+                  
                 {/* Controls */}
                 <div className="mt-4 pt-4 px-1 border-t border-white/10">
                   <div className="flex items-center justify-between mb-2">
@@ -437,8 +448,8 @@ export default function App() {
                         className="w-[74px] liquid-glass-nested rounded-lg px-2 py-0.5 text-[13px] font-semibold tabular-nums text-white text-right outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       />
                       <span className="text-[12px] text-white/60">personas</span>
-                    </div>
                   </div>
+                </div>
                   <input
                     type="range"
                     min={SEED_MIN}
@@ -448,10 +459,7 @@ export default function App() {
                     onChange={(e) => setNSeeds(Number(e.target.value))}
                     className="w-full accent-white cursor-pointer h-2"
                   />
-                  <p className="text-[10px] text-white/50 mt-1.5">
-                    Diverse synthetic personas from the Nemotron catalog — up to{" "}
-                    {SEED_MAX.toLocaleString()}
-                  </p>
+                  <p className="text-[10px] text-white/50 mt-1.5">{MH.seedHint}</p>
                   <div className="flex items-center justify-between mt-2">
                     <button
                       onClick={() => setShowAdvanced((s) => !s)}
@@ -464,7 +472,7 @@ export default function App() {
                         <button
                           key={n}
                           onClick={() => setNSeeds(n)}
-                          className={cn(
+                            className={cn(
                             "text-[11px] px-2 py-0.5 rounded-md transition",
                             nSeeds === n
                               ? "liquid-glass-segment-active px-2 py-0.5 rounded-lg"
@@ -474,8 +482,8 @@ export default function App() {
                           {n}
                         </button>
                       ))}
-                    </div>
-                  </div>
+                              </div>
+                            </div>
                   <AnimatePresence>
                     {showAdvanced && (
                       <motion.div
@@ -554,17 +562,17 @@ export default function App() {
                     <div className="sim-scan-line rounded-2xl" />
                     <div className="h-[min(380px,50vh)] min-h-[300px]">
                       <BrainSimulation isActive emotions={{}} />
-                    </div>
+                      </div>
                     <div className="border-t border-white/10 px-6 py-5 text-center ui-panel-header">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[11px] text-white font-medium mb-3">
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        Simulation in progress
+                        {MH.simLoadingBadge}
                       </div>
                       <h2 className="text-xl font-semibold tracking-tight">
-                        Modeling {nSeeds.toLocaleString()} emotional responses
+                        {MH.simLoadingTitle} · {nSeeds.toLocaleString()} viewers
                       </h2>
                       <p className="text-white/45 text-[13px] mt-1.5 max-w-md mx-auto">
-                        Embedding your message · predicting affect & reactions · tracing emotional contagion
+                        {MH.simLoadingSub}
                       </p>
                       <div className="flex justify-center gap-6 mt-5 text-[10px] uppercase tracking-widest text-white/30 font-mono-data">
                         <span className="text-white/60">Understand</span>
@@ -572,10 +580,10 @@ export default function App() {
                         <span>Feel</span>
                         <span>→</span>
                         <span>Spread</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                        </div>
               )}
 
               {error && !result && (
@@ -584,7 +592,7 @@ export default function App() {
                   <h2 className="text-lg font-semibold mb-1">Simulation failed</h2>
                   <p className="text-white/50 text-[13px] mb-5">{error}</p>
                   <div className="flex gap-2 justify-center">
-                    <button
+                      <button
                       onClick={reset}
                       className="px-4 py-2 rounded-lg bg-white/[0.06] border border-white/10 text-[13px] hover:bg-white/10 transition"
                     >
@@ -595,9 +603,9 @@ export default function App() {
                       className="px-4 py-2 rounded-lg bg-white text-black text-[13px] font-medium hover:bg-white/90 transition"
                     >
                       Retry
-                    </button>
+                      </button>
+                    </div>
                   </div>
-                </div>
               )}
 
               {result && (
@@ -615,11 +623,11 @@ export default function App() {
                   ollamaUp={ollamaUp}
                 />
               )}
-            </motion.div>
+                </motion.div>
           )}
         </AnimatePresence>
       </main>
-    </div>
+              </div>
   );
 }
 
@@ -699,9 +707,9 @@ function ResultsView({
   }, [tab]);
 
   const tabs = [
-    { id: "spread" as const, label: "Emotional spread", icon: Network, desc: "Contagion map & brain affect" },
-    { id: "analysis" as const, label: "Wellbeing analytics", icon: BarChart3, desc: "Affect profile & harm signals" },
-    { id: "model" as const, label: "How it works", icon: Cpu, desc: "Simulation pipeline" },
+    { id: "spread" as const, label: "Emotional spread", icon: Network, desc: MH.tabSpreadDesc },
+    { id: "analysis" as const, label: "Wellbeing analytics", icon: BarChart3, desc: MH.tabAnalysisDesc },
+    { id: "model" as const, label: "How it works", icon: Cpu, desc: MH.tabModelDesc },
   ];
 
   const kpis = [
@@ -739,9 +747,9 @@ function ResultsView({
   return (
     <div className="space-y-6 pb-12 relative">
       {/* Hero command strip */}
-      <motion.div
+                    <motion.div
         initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
+                      animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="sim-panel rounded-2xl overflow-hidden"
       >
@@ -758,10 +766,10 @@ function ResultsView({
                 }}
               >
                 <Flame className="w-7 h-7" style={{ color: v.tone }} />
-              </div>
-              <div>
+                              </div>
+                              <div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-white/35 font-mono-data mb-1">
-                  Wellbeing impact
+                  {MH.resultsImpactLabel}
                 </div>
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: v.tone }}>
@@ -769,17 +777,17 @@ function ResultsView({
                   </span>
                   <span className="text-[13px] font-mono-data tabular-nums text-white/40">
                     {score.toFixed(2)}
-                  </span>
-                </div>
+                                </span>
+                              </div>
                 <p className="text-[13px] text-white/45 mt-1 max-w-xs leading-relaxed">{v.blurb}</p>
-              </div>
-            </div>
+                            </div>
+                            </div>
 
             {/* Content excerpt */}
             <div className="flex-1 min-w-0 lg:border-l lg:border-white/[0.06] lg:pl-8">
               <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 font-mono-data mb-2">
                 Content analyzed
-              </div>
+                </div>
               <blockquote className="text-[14px] md:text-[15px] text-white/75 leading-relaxed line-clamp-3 border-l-2 border-white/30 pl-4">
                 {analyzedText}
               </blockquote>
@@ -795,9 +803,9 @@ function ResultsView({
                     {result.timing.simulate_seconds.toFixed(1)}s compute
                   </span>
                 )}
-              </div>
-            </div>
-          </div>
+                      </div>
+                    </div>
+                  </div>
 
           {/* KPI row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/[0.06]">
@@ -808,24 +816,24 @@ function ResultsView({
                     {k.label}
                   </span>
                   <k.icon className="w-3.5 h-3.5 opacity-40" style={{ color: k.accent }} />
-                </div>
+                  </div>
                 <div
                   className={`text-xl font-bold tabular-nums tracking-tight ${k.capitalize ? "capitalize" : ""}`}
                   style={{ color: k.accent }}
                 >
                   {k.value}
-                </div>
+                  </div>
                 <div className="text-[10px] text-white/35 mt-0.5 truncate">{k.sub}</div>
+                </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+            </motion.div>
 
       {warning && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
           className="rounded-xl ui-inset px-4 py-3 text-[12px] text-white/80 flex items-start gap-2"
         >
           <span className="text-white/50 shrink-0">⚠</span>
@@ -837,10 +845,10 @@ function ResultsView({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex gap-1 p-1 rounded-xl ui-inset w-fit">
           {tabs.map((t) => (
-            <button
+                        <button 
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={cn(
+                            className={cn(
                 "relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200",
                 tab === t.id
                   ? "bg-white text-black shadow-md"
@@ -849,13 +857,13 @@ function ResultsView({
             >
               <t.icon className="w-4 h-4" />
               {t.label}
-            </button>
+                          </button>
           ))}
-        </div>
+                    </div>
         <p className="text-[12px] text-white/50 hidden sm:block">
           {tabs.find((t) => t.id === tab)?.desc}
         </p>
-      </div>
+              </div>
 
       <AnimatePresence initial={false}>
         {tab === "spread" && (
@@ -874,11 +882,11 @@ function ResultsView({
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/15 to-transparent border border-white/20 grid place-items-center">
                     <Brain className="w-5 h-5 text-white" />
-                  </div>
+                          </div>
                   <div>
                     <div className="text-[15px] font-semibold text-white tracking-tight">
                       Neural emotional response
-                    </div>
+                        </div>
                     <div className="text-[11px] text-white/40 mt-0.5">
                       {selectedAgent ? (
                         <>
@@ -890,24 +898,24 @@ function ResultsView({
                       ) : (
                         "Population brain map · empathy, connection, inspiration, curiosity, joy"
                       )}
-                    </div>
-                  </div>
                 </div>
+              </div>
+                      </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-[10px] uppercase tracking-widest text-white/30 font-mono-data">
                     Peak region
-                  </span>
+                        </span>
                   <span className="px-3 py-1 rounded-full bg-white/10 border border-white/25 text-[11px] font-semibold text-white text-right max-w-[200px] leading-snug">
                     {brainDominantRegion}
-                  </span>
+                          </span>
                   <span className="text-[10px] text-white/40 capitalize">{brainDominant}</span>
-                </div>
-              </div>
+                        </div>
+                      </div>
               <div className="h-[min(560px,58vh)] min-h-[400px]">
                 <BrainSimulation hero emotions={brainEmotions} dominantEmotion={brainDominant} />
-              </div>
-            </div>
-
+                    </div>
+                          </div>
+                          
             {/* ── CASCADE + AGENT SIDEBAR ── */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 min-h-[540px]">
               <div className="xl:col-span-8 sim-panel rounded-2xl overflow-hidden flex flex-col min-h-[480px]">
@@ -915,7 +923,7 @@ function ResultsView({
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/15 grid place-items-center">
                       <Network className="w-4 h-4 text-white/80" />
-                    </div>
+                          </div>
                     <div>
                       <div className="text-[13px] font-semibold text-white">Emotional contagion map</div>
                       <div className="text-[10px] text-white/40 font-mono-data">
@@ -923,21 +931,21 @@ function ResultsView({
                         {graphData.sampled
                           ? `${graphData.agents.length} nodes · ${graphData.total} total`
                           : `${graphData.total} exposure events`}
-                      </div>
+                        </div>
                     </div>
-                  </div>
+                        </div>
                   <div className="flex items-center gap-2">
                     <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-[9px] text-white/40 font-mono-data uppercase tracking-wider">
                       Scroll zoom · Drag pan
-                    </div>
+                                </div>
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.06] border border-white/15">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       <span className="text-[10px] text-white/70 font-medium uppercase tracking-wider">
                         Live
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                              </span>
+                            </div>
+                        </div>
+                      </div>
                 <div className="flex-1 min-h-[420px] p-0.5">
                   <NetworkGraph
                     agents={graphData.agents}
@@ -949,8 +957,8 @@ function ResultsView({
                     displayTotal={graphData.total}
                     sampled={graphData.sampled}
                   />
-                </div>
-              </div>
+                      </div>
+                    </div>
 
               {/* Agent detail / spreaders */}
               <div className="xl:col-span-4 sim-panel rounded-2xl overflow-hidden flex flex-col min-h-[480px]">
@@ -981,28 +989,24 @@ function ResultsView({
                   <div className="flex flex-col flex-1 p-5 min-h-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Sparkles className="w-4 h-4 text-white/40" />
-                      <h3 className="text-[14px] font-semibold text-white">Explore emotional spread</h3>
+                      <h3 className="text-[14px] font-semibold text-white">{MH.spreadSidebarTitle}</h3>
                     </div>
-                    <p className="text-[12px] text-white/45 leading-relaxed">
-                      Select a viewer to see how the content landed on them — their vote, emotional profile, and attention — or chat empathetically in first person.
-                    </p>
-                    <button
+                    <p className="text-[12px] text-white/45 leading-relaxed">{MH.spreadSidebarBody}</p>
+                      <button
                       type="button"
                       onClick={() => setTab("analysis")}
                       className="mt-3 self-start text-[11px] text-white/60 hover:text-white flex items-center gap-1 transition"
-                    >
+                      >
                       View wellbeing analytics <ArrowRight className="w-3 h-3" />
-                    </button>
+                      </button>
 
                     <div className="mt-5 pt-4 border-t border-white/[0.06] flex-1 flex flex-col min-h-0">
                       <div className="text-[10px] uppercase tracking-[0.15em] text-white/35 font-mono-data mb-2">
                         Top emotional amplifiers
-                      </div>
+                    </div>
                       <div className="space-y-1 overflow-y-auto flex-1 -mx-1 px-1">
                         {topSpreaders.length === 0 && (
-                          <p className="text-[12px] text-white/35 py-4 text-center">
-                            No reshares in this run — emotional signal stayed mostly private to initial viewers.
-                          </p>
+                          <p className="text-[12px] text-white/35 py-4 text-center">{MH.spreadEmptyShares}</p>
                         )}
                         {topSpreaders.map((a, i) => {
                           const occ = (a.occupation || a.archetype).replace(/_/g, " ");
@@ -1019,37 +1023,37 @@ function ResultsView({
                               <div className="min-w-0 flex-1">
                                 <div className="text-[12.5px] text-white/85 capitalize truncate font-medium">
                                   {occ}
-                                </div>
+                        </div>
                                 <div className="text-[10px] text-white/40 mt-0.5">
                                   → {a.shared_to_indices.length} recipients · wave {a.wave}
-                                </div>
-                              </div>
+                          </div>
+                        </div>
                               <span className="text-[10px] text-white/50 capitalize shrink-0 hidden sm:block">
                                 {em}
                               </span>
                               <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/60 transition shrink-0" />
-                            </button>
+                      </button>
                           );
                         })}
-                      </div>
                     </div>
-                  </div>
+                    </div>
+                      </div>
                 )}
               </div>
             </div>
           </motion.div>
-        )}
+                    )}
 
         {tab === "analysis" && (
-          <motion.div
+                        <motion.div
             key="analysis"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25 }}
           >
             <MetricsDashboard result={result} />
-          </motion.div>
+                        </motion.div>
         )}
 
         {tab === "model" && (
@@ -1061,9 +1065,9 @@ function ResultsView({
             transition={{ duration: 0.25 }}
           >
             <ModelArchitecture result={result} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
     </div>
   );
 }

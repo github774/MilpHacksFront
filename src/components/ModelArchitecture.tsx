@@ -52,8 +52,8 @@ export function ModelArchitecture({ result }: Props) {
             </h3>
             <p className="text-[12.5px] text-white/50 mt-1 leading-relaxed max-w-2xl">
               Not a generic chatbot guess. Every simulated viewer has a biography, job, and values.
-              The engine predicts how your exact transcript would land emotionally — then shows how
-              sharing could amplify that impact across a social network.
+              The engine estimates emotional benefit or harm from your exact transcript — then shows
+              how sharing could amplify that impact across a social network.
             </p>
           </div>
         </div>

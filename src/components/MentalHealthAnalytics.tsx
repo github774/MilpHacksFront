@@ -17,8 +17,8 @@ export function MentalHealthAnalytics() {
         <h2 className="text-[15px] font-semibold text-white mb-2">Why this matters for mental health</h2>
         <p className="text-[13px] text-white/60 leading-relaxed max-w-3xl mb-4">
           Social content shapes mood, self-worth, and help-seeking — especially for young audiences.
-          SHIELD simulates diverse viewers reacting to your exact transcript, maps five affect
-          dimensions, and previews how emotional messages propagate through a network.
+          SHIELD estimates who may benefit from your message, who may struggle, and how emotional
+          signals could propagate through a network.
         </p>
         <ul className="space-y-2">
           {MH_WHY_IT_MATTERS.map((line) => (
@@ -53,8 +53,9 @@ export function MentalHealthAnalytics() {
       <div className="ui-inset rounded-xl px-4 py-3">
         <p className="text-[12px] text-white/65 leading-relaxed">
           <span className="text-white/85 font-medium">Reading these charts:</span> Use spread score
-          and share rate to gauge contagion risk; polarization and dislike-shares flag potential harm
-          amplification; affect bars show whether empathy, joy, or stress-like responses dominate.
+          and share rate to gauge contagion risk; polarization and dislike-shares flag potential harm;
+          affect bars show whether empathy, joy, or stress-like responses dominate — and who may benefit
+          from your framing.
         </p>
       </div>
     </div>
